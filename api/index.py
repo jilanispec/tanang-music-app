@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import os
 import secrets
+from urllib.parse import urlparse
 import requests
 from flask import Flask, jsonify, make_response, request, send_from_directory
 
@@ -51,14 +52,7 @@ def sign_session_token(username: str, secret: str) -> str:
     return f"{username}:{nonce}:{sig}"
 
 
-@app.route("/", methods=["GET"])
-def serve_home():
-    return send_from_directory(PUBLIC_DIR, "index.html")
-
-
-@app.route("/api/health", methods=["GET"])
-@app.route("/health", methods=["GET"])
-def health():
+def _health_response():
     return jsonify({
         "status": "ok",
         "youtube_key_configured": bool(os.environ.get("YOUTUBE_API_KEY")),
@@ -66,9 +60,7 @@ def health():
     }), 200
 
 
-@app.route("/api/auth", methods=["GET", "POST", "OPTIONS"])
-@app.route("/auth", methods=["GET", "POST", "OPTIONS"])
-def auth():
+def _auth_response():
     if request.method == "OPTIONS":
         return make_response("", 204)
     if request.method == "GET":
@@ -101,9 +93,7 @@ def auth():
     return jsonify({"error": "Supported actions: register, verify"}), 400
 
 
-@app.route("/api/youtube_search", methods=["GET"])
-@app.route("/youtube_search", methods=["GET"])
-def youtube_search():
+def _youtube_search_response():
     query = (request.args.get("q") or "").strip().lower()
     if not query:
         return jsonify({"error": "Missing query parameter 'q'"}), 400
@@ -148,3 +138,43 @@ def youtube_search():
 
     SEARCH_CACHE[query] = tracks
     return jsonify({"cached": False, "tracks": tracks}), 200
+
+
+@app.route("/api/index.py", methods=["GET", "POST", "OPTIONS"])
+def vercel_rewritten_index():
+    # Inspect original URL if provided by headers or query
+    orig = (
+        request.headers.get("x-vercel-original-path")
+        or request.headers.get("x-now-route-matches")
+        or ""
+    ).lower()
+    if "auth" in orig or request.method == "POST":
+        return _auth_response()
+    if "youtube_search" in orig or "q" in request.args:
+        return _youtube_search_response()
+    if "health" in orig:
+        return _health_response()
+    return send_from_directory(PUBLIC_DIR, "index.html")
+
+
+@app.route("/", methods=["GET"])
+def serve_home():
+    return send_from_directory(PUBLIC_DIR, "index.html")
+
+
+@app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
+def health():
+    return _health_response()
+
+
+@app.route("/api/auth", methods=["GET", "POST", "OPTIONS"])
+@app.route("/auth", methods=["GET", "POST", "OPTIONS"])
+def auth():
+    return _auth_response()
+
+
+@app.route("/api/youtube_search", methods=["GET"])
+@app.route("/youtube_search", methods=["GET"])
+def youtube_search():
+    return _youtube_search_response()

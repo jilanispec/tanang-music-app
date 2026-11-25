@@ -3,15 +3,17 @@ import hmac
 import os
 import secrets
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+
+app = Flask(__name__, static_folder=PUBLIC_DIR, static_url_path="")
 
 SEARCH_CACHE: dict[str, list[dict]] = {}
 
 
 def hash_password(password: str) -> str:
-    """Hash a password or hash-string input using scrypt + random salt."""
     if not isinstance(password, str) or len(password) < 8:
         raise ValueError("Password/secret must be at least 8 characters.")
     salt = secrets.token_hex(16)
@@ -26,7 +28,6 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, stored_hash: str) -> bool:
-    """Safely verify a candidate password against a stored scrypt hash."""
     try:
         scheme, salt, expected_hex = stored_hash.split("$", 2)
         if scheme != "scrypt":
@@ -44,11 +45,15 @@ def verify_password(password: str, stored_hash: str) -> bool:
 
 
 def sign_session_token(username: str, secret: str) -> str:
-    """Create an HMAC-signed token for authenticated sessions."""
     nonce = secrets.token_hex(12)
     msg = f"{username}:{nonce}".encode("utf-8")
     sig = hmac.new(secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
     return f"{username}:{nonce}:{sig}"
+
+
+@app.get("/")
+def serve_home():
+    return send_from_directory(PUBLIC_DIR, "index.html")
 
 
 @app.get("/api/health")

@@ -35,6 +35,42 @@ DEFAULT_CONFIG = {
     ],
 }
 
+import requests
+from flask import jsonify
+
+PIPED_INSTANCES = [
+    "https://pipedapi.kavin.rocks",
+    "https://pipedapi.tokhmi.xyz",
+    "https://pipedapi.moomoo.me",
+    "https://api.piped.yt",
+]
+
+@app.route("/api/stream/<video_id>", methods=["GET"])
+def get_audio_stream(video_id):
+    vid = (video_id or "").strip()[:32]
+    if not vid:
+        return jsonify({"error": "Missing video id"}), 400
+
+    for base in PIPED_INSTANCES:
+        try:
+            resp = requests.get(f"{base}/streams/{vid}", timeout=6)
+            if resp.status_code != 200:
+                continue
+            data = resp.json()
+            streams = data.get("audioStreams") or []
+            m4a = [s for s in streams if "mp4" in (s.get("mimeType") or "")]
+            chosen = sorted(m4a or streams, key=lambda x: x.get("bitrate", 0), reverse=True)
+            if chosen and chosen[0].get("url"):
+                return jsonify({
+                    "audio_url": chosen[0]["url"],
+                    "title": data.get("title", ""),
+                    "thumbnail": data.get("thumbnailUrl", ""),
+                }), 200
+        except Exception:
+            continue
+
+    return jsonify({"error": "No stream available"}), 502
+    
 
 def _kv_headers():
     token = (

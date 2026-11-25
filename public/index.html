@@ -527,8 +527,9 @@
       gap: 7px;
     }
 
-    /* Clean Non-Overlapping Slidable Carousel (1 · 2 · 3) */
+    /* 16:9 Full Banner / Ad Carousel (1 · 2 · 3) */
     .carousel-wrap { margin-top: 14px; }
+    .carousel-wrap.hidden { display: none; }
     .carousel-track {
       display: flex;
       overflow-x: auto;
@@ -540,26 +541,34 @@
     .carousel-track::-webkit-scrollbar { display: none; }
     .carousel-slide {
       flex: 0 0 100%;
+      width: 100%;
       scroll-snap-align: start;
       border-radius: 14px;
       border: 1px solid var(--border);
       background: var(--surface);
-      padding: 11px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16 / 9;
+    }
+    .carousel-slide.clickable { cursor: pointer; }
+    .carousel-slide img.banner-16-9 {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .carousel-slide-fallback {
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
-      gap: 11px;
-      cursor: pointer;
+      justify-content: center;
+      font-family: "GoEagles", sans-serif;
+      color: var(--accent);
+      font-size: 1.05rem;
+      letter-spacing: 0.06em;
+      background: linear-gradient(135deg, #16161b 0%, #0b0b0e 100%);
     }
-    .slide-square-img {
-      width: 64px;
-      height: 64px;
-      border-radius: 10px;
-      object-fit: cover;
-      background: var(--surface-2);
-      flex-shrink: 0;
-      border: 1px solid var(--border);
-    }
-    .carousel-slide-content { flex: 1; min-width: 0; }
     .carousel-dots {
       display: flex;
       align-items: center;
@@ -583,7 +592,7 @@
       border-color: var(--accent);
     }
 
-    /* Spotify-Style Compact Square Playlist Row / Strip */
+    /* Spotify-Style Compact Square Playlist Cards (Fixed Width + 2-Line Clamped Title) */
     .spotify-playlist-strip {
       display: flex;
       gap: 10px;
@@ -594,11 +603,15 @@
     .spotify-playlist-strip::-webkit-scrollbar { display: none; }
     .sp-pl-card {
       flex: 0 0 112px;
+      width: 112px;
+      min-width: 112px;
+      max-width: 112px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 7px;
       cursor: pointer;
+      overflow: hidden;
     }
     .sp-pl-card:active { background: var(--surface-2); }
     .sp-pl-thumb {
@@ -611,19 +624,24 @@
       margin-bottom: 6px;
     }
     .sp-pl-title {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 800;
-      white-space: nowrap;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
+      word-break: break-word;
+      min-height: 1.85rem;
     }
     .sp-pl-sub {
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     /* Search Bar with Back Arrow + Last 10 Searches */
@@ -634,7 +652,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 6px 8px 6px 8px;
+      padding: 6px 8px;
     }
     .search-back-btn {
       width: 34px;
@@ -685,7 +703,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 6px;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 800;
       color: var(--muted);
     }
@@ -766,7 +784,6 @@
       border-radius: 7px;
       flex-shrink: 0;
     }
-    /* Small Square Thumbnail Box Only (Spotify Style) */
     .song-item.is-playlist-row img {
       width: 48px;
       height: 48px;
@@ -847,6 +864,25 @@
       font-size: 0.86rem;
       margin-bottom: 8px;
       outline: none;
+    }
+
+    .crop-preview-16-9 {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      border: 1px dashed var(--accent);
+      overflow: hidden;
+      background: #08080a;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .crop-preview-16-9 img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .updates-badge {
@@ -1041,7 +1077,6 @@
         <span>15d auto-idle lock</span>
       </div>
 
-      <!-- Human Verification Captcha -->
       <div class="captcha-box">
         <div class="captcha-top">
           <span>VERIFY HUMAN</span>
@@ -1058,7 +1093,7 @@
     </div>
   </div>
 
-  <!-- Fixed Non-Scrolling Top Bar with Step-by-Step Back Button -->
+  <!-- Fixed Non-Scrolling Top Bar -->
   <header class="topbar">
     <div class="topbar-left">
       <button type="button" class="back-nav-btn" id="globalBackBtn" aria-label="Go back" disabled>
@@ -1069,7 +1104,7 @@
         <span>TANANG <b>MUSIC</b></span>
       </a>
     </div>
-    <div class="room-badge" id="versionBadge">v2.2</div>
+    <div class="room-badge" id="versionBadge">v2.3</div>
   </header>
 
   <main class="app-main">
@@ -1156,13 +1191,13 @@
         </div>
       </div>
 
-      <!-- Slidable Dashboard Carousel (1 · 2 · 3) -->
-      <div class="carousel-wrap">
+      <!-- 16:9 Full Image Banner / Ad Carousel (1 · 2 · 3) -->
+      <div class="carousel-wrap" id="carouselWrap">
         <div class="carousel-track" id="dashboardCarousel"></div>
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <!-- Spotify-Style Compact Square Playlist Cards -->
+      <!-- Spotify-Style Compact Square Playlist Cards (Max 2 Lines Title) -->
       <div class="section-heading">
         <h2>RECOMMENDED PLAYLISTS</h2>
         <span class="status-text" style="font-size: 0.72rem;">FOR YOU</span>
@@ -1171,11 +1206,11 @@
 
       <!-- Updates Section at Bottom -->
       <div class="updates-footer-card" id="updatesCard">
-        <span class="updates-badge" id="updateVersionTag">UPDATE v2.2</span>
+        <span class="updates-badge" id="updateVersionTag">UPDATE v2.3</span>
         <div class="update-timestamp" id="updatePublishedAt">Published: Nov 25, 2026</div>
         <h3 style="margin: 2px 0 4px; font-size: 0.96rem;" id="updateTitle">Welcome to TANANG MUSIC</h3>
         <p style="margin: 0; font-size: 0.82rem; color: var(--muted);" id="updateBody">
-          Explore personalized playlists, movie hits, and Spotify/YouTube playlist imports.
+          Full playlist imports, 16:9 banners, and background playback enabled.
         </p>
       </div>
     </section>
@@ -1197,7 +1232,6 @@
         </button>
       </div>
 
-      <!-- Recent Searches (Last 10 · Long-press 1 to delete · Clear All button) -->
       <div class="history-panel" id="searchHistoryPanel">
         <div class="history-header">
           <span>RECENT SEARCHES (UP TO 10 · HOLD TO DELETE)</span>
@@ -1253,10 +1287,10 @@
 
       <div id="libPlaylistsView">
         <div class="import-card">
-          <h3>IMPORT FROM YOUTUBE OR SPOTIFY</h3>
+          <h3>IMPORT FULL PLAYLIST (YOUTUBE OR SPOTIFY)</h3>
           <input id="importUrlInput" type="url" placeholder="Paste YouTube or Spotify playlist link...">
           <div style="display: flex; gap: 8px;">
-            <input id="importNameInput" type="text" placeholder="Optional playlist name" style="margin-bottom: 0;">
+            <input id="importNameInput" type="text" placeholder="Leave blank to keep original name" style="margin-bottom: 0;">
             <button type="button" class="text-button accent" id="importPlaylistBtn" style="white-space: nowrap;">IMPORT</button>
           </div>
           <p class="status-text" id="importStatus" style="margin: 6px 0 0;"></p>
@@ -1330,19 +1364,24 @@
 
       <div class="settings-card" id="adminControlsCard" style="display: none;">
         <span class="updates-badge">ADMIN EDITOR</span>
-        <h2 style="margin: 4px 0; font-family: 'MaximumImpact', sans-serif; font-weight: normal;">PUBLISH UPDATES & SLIDES</h2>
-        <p class="status-text" style="margin: 0 0 10px;">Changes publish live to all users with timestamp.</p>
+        <h2 style="margin: 4px 0; font-family: 'MaximumImpact', sans-serif; font-weight: normal;">PUBLISH UPDATES & 16:9 ADS</h2>
+        <p class="status-text" style="margin: 0 0 10px;">Upload/crop 16:9 images, set optional sponsor redirect URLs, or hide ads.</p>
 
         <input id="adminVersionInput" class="admin-input" type="text" placeholder="App Version (e.g. v2.3)">
         <input id="adminTitleInput" class="admin-input" type="text" placeholder="Update Headline">
         <textarea id="adminBodyInput" class="admin-input" rows="2" placeholder="Update message shown to all users..."></textarea>
 
+        <div class="settings-row" style="margin-bottom: 8px;">
+          <span>Show Ads / Banners on Dashboard</span>
+          <input type="checkbox" id="adminShowAdsToggle" checked style="accent-color: var(--accent); width: 18px; height: 18px;">
+        </div>
+
         <div style="margin: 8px 0 6px; font-size: 0.74rem; font-weight: 800; color: var(--accent);">
-          DASHBOARD SLIDES (1 · 2 · 3)
+          16:9 AD / BANNER SLIDES (1 · 2 · 3)
         </div>
         <div id="adminSlidesEditor"></div>
         <button type="button" class="text-button" id="addAdminSlideBtn" style="width: 100%; margin-bottom: 10px;">
-          + ADD SLIDE
+          + ADD 16:9 BANNER / AD
         </button>
 
         <button type="button" class="text-button accent" id="saveAdminConfigBtn" style="width: 100%; padding: 11px;">
@@ -1455,7 +1494,9 @@ const state = {
   favorites: [],
   playlists: [],
   recentQueries: [],
+  showAds: true,
   slides: [],
+  editingSlideIndex: -1,
   verifiedAdminKey: "",
   searchFilter: "all",
   sheetTrack: null,
@@ -1464,6 +1505,7 @@ const state = {
   autoQueueRelated: true,
   playerReady: false,
   isPlaying: false,
+  userPausedManually: false,
 };
 
 let ytPlayer = null;
@@ -1539,17 +1581,13 @@ async function restoreSessionIfValid() {
   try {
     const sess = JSON.parse(raw);
     const now = Date.now();
-    const idleTime = now - Number(sess.last_active_at || 0);
-
-    // Auto logout if inactive for more than 15 days
-    if (idleTime > FIFTEEN_DAYS_MS) {
+    if (now - Number(sess.last_active_at || 0) > FIFTEEN_DAYS_MS) {
       clearSession();
       generateCaptcha();
       document.getElementById("authStatus").textContent = "Session expired after 15 days of inactivity. Please login.";
       return;
     }
 
-    // Only auto-login when installed as app (APK) or when Remember Me was checked
     if ((sess.remember || isStandaloneApp()) && sess.username && sess.token) {
       sess.last_active_at = now;
       localStorage.setItem("tanang_session", JSON.stringify(sess));
@@ -1569,25 +1607,6 @@ async function restoreSessionIfValid() {
   }
 }
 
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && state.user) {
-    const raw = localStorage.getItem("tanang_session");
-    if (raw) {
-      try {
-        const sess = JSON.parse(raw);
-        if (Date.now() - Number(sess.last_active_at || 0) > FIFTEEN_DAYS_MS) {
-          clearSession();
-          state.token = null;
-          document.getElementById("authGate").classList.remove("hidden");
-          generateCaptcha();
-          return;
-        }
-      } catch {}
-    }
-    touchSessionActivity();
-  }
-});
-
 /* Greetings */
 function updateGreeting(name) {
   const hour = new Date().getHours();
@@ -1605,7 +1624,7 @@ function updateGreeting(name) {
   document.getElementById("greetingHeadline").innerHTML = `Hello, <span>${escapeHtml(name)}.</span>`;
 }
 
-/* Step-by-Step Back Navigation Stack */
+/* Browser History + Android Hardware Back Button Support */
 function renderActivePage(pageId) {
   state.currentPage = pageId;
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
@@ -1625,16 +1644,36 @@ function goToPage(pageId, pushHistory = true) {
   }
   if (pushHistory) {
     state.navStack.push(pageId);
+    try {
+      window.history.pushState({ pageId }, "", `#${pageId}`);
+    } catch {}
   }
   renderActivePage(pageId);
 }
 
 function goStepBack() {
-  if (state.navStack.length <= 1) return;
-  state.navStack.pop();
-  const prevPage = state.navStack[state.navStack.length - 1] || "homePage";
-  renderActivePage(prevPage);
+  if (state.navStack.length > 1) {
+    state.navStack.pop();
+    const prevPage = state.navStack[state.navStack.length - 1] || "homePage";
+    renderActivePage(prevPage);
+  }
 }
+
+window.addEventListener("popstate", () => {
+  if (!document.getElementById("actionSheetBackdrop").classList.contains("hidden")) {
+    closeActionSheet();
+    try { window.history.pushState({ pageId: state.currentPage }, "", `#${state.currentPage}`); } catch {}
+    return;
+  }
+  if (state.navStack.length > 1) {
+    goStepBack();
+  }
+});
+
+// Seed initial browser history state so first Android hardware Back does not close app
+try {
+  window.history.replaceState({ pageId: "homePage" }, "", "#homePage");
+} catch {}
 
 document.getElementById("globalBackBtn").addEventListener("click", goStepBack);
 document.querySelectorAll("[data-page]").forEach((btn) => {
@@ -1735,7 +1774,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   generateCaptcha();
 });
 
-/* Cloud Library & Recent Searches (Up to 10) */
+/* Cloud Library & Recent Searches */
 async function syncUserLibraryFromCloud() {
   if (!state.user) return;
   try {
@@ -1837,7 +1876,6 @@ document.getElementById("searchInput").addEventListener("focus", () => {
   }
 });
 
-/* Left Back Arrow Inside Search Returns to Recent Searches List */
 document.getElementById("searchInnerBackBtn").addEventListener("click", () => {
   document.getElementById("searchResults").innerHTML = "";
   document.getElementById("searchStatus").textContent = "Recent searches";
@@ -1846,7 +1884,7 @@ document.getElementById("searchInnerBackBtn").addEventListener("click", () => {
   }
 });
 
-/* Spotify-Style Compact Square Recommended Playlists */
+/* Spotify-Style Compact Square Recommended Playlists (2-Line Clamped Title) */
 async function loadRecommendedPlaylists() {
   const seed = state.recentQueries[0] || "Telugu hit songs";
   const grid = document.getElementById("recommendedPlaylistsGrid");
@@ -1884,26 +1922,34 @@ window.__openSearchedPlaylist = async (playlistId) => {
   } catch {}
 };
 
-/* Clean Dashboard Slidable Carousel (1 · 2 · 3) */
-function renderCarousel(slides) {
+/* 16:9 Full Banner / Ad Carousel (Redirects ONLY if ad_url exists) */
+function renderCarousel(slides, showAds = true) {
   state.slides = slides || [];
+  state.showAds = showAds;
+  const wrap = document.getElementById("carouselWrap");
   const track = document.getElementById("dashboardCarousel");
   const dots = document.getElementById("carouselDots");
-  if (!state.slides.length) {
+
+  if (!showAds || !state.slides.length) {
+    wrap.classList.add("hidden");
     track.innerHTML = "";
     dots.innerHTML = "";
     return;
   }
 
-  track.innerHTML = state.slides.map((s, idx) => `
-    <div class="carousel-slide" onclick="window.__triggerSlide(${idx})">
-      <img class="slide-square-img" src="${escapeHtml(s.image || "/logo-circle.png")}" alt="">
-      <div class="carousel-slide-content">
-        <div style="font-size: 0.94rem; font-weight: 800;">${escapeHtml(s.title)}</div>
-        <div style="font-size: 0.78rem; color: var(--muted); margin-top: 2px;">${escapeHtml(s.subtitle)}</div>
+  wrap.classList.remove("hidden");
+  track.innerHTML = state.slides.map((s, idx) => {
+    const hasUrl = Boolean((s.ad_url || "").trim());
+    return `
+      <div class="carousel-slide ${hasUrl ? "clickable" : ""}" onclick="window.__triggerSlide(${idx})">
+        ${
+          s.image
+            ? `<img class="banner-16-9" src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title || "Banner")}">`
+            : `<div class="carousel-slide-fallback">${escapeHtml(s.title || "TANANG MUSIC")}</div>`
+        }
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   dots.innerHTML = state.slides.map((_, idx) => `
     <button type="button" class="carousel-dot ${idx === 0 ? "active" : ""}" onclick="window.__scrollToSlide(${idx})">${idx + 1}</button>
@@ -1923,13 +1969,13 @@ window.__scrollToSlide = (idx) => {
 
 window.__triggerSlide = (idx) => {
   const s = state.slides[idx];
-  if (!s || !s.query) return;
-  document.getElementById("searchInput").value = s.query;
-  goToPage("searchPage", true);
-  performSearch(true);
+  if (!s) return;
+  const targetUrl = (s.ad_url || "").trim();
+  if (!targetUrl) return; // Normal image: no redirect powers
+  window.open(targetUrl, "_blank", "noopener,noreferrer");
 };
 
-/* Global Config + Gated Admin Access */
+/* Global Config + Admin 16:9 Image Cropper & Ad Toggle */
 async function loadGlobalAppConfig() {
   try {
     const res = await fetch("/api/app_config");
@@ -1951,7 +1997,9 @@ async function loadGlobalAppConfig() {
       document.getElementById("updateBody").textContent = cfg.announcement_body;
       document.getElementById("adminBodyInput").value = cfg.announcement_body;
     }
-    renderCarousel(cfg.slides || []);
+    const showAds = cfg.show_ads !== false;
+    document.getElementById("adminShowAdsToggle").checked = showAds;
+    renderCarousel(cfg.slides || [], showAds);
   } catch {}
 }
 
@@ -1985,35 +2033,117 @@ document.getElementById("verifyAdminKeyBtn").addEventListener("click", async () 
   }
 });
 
+/* Crop any uploaded image or URL into a compact 16:9 JPEG thumbnail */
+function cropSourceTo16x9DataUrl(srcUrl, callback) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    const targetW = 640;
+    const targetH = 360; // 16:9 ratio
+    const canvas = document.createElement("canvas");
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext("2d");
+
+    const srcRatio = img.width / img.height;
+    const targetRatio = 16 / 9;
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+
+    if (srcRatio > targetRatio) {
+      sw = img.height * targetRatio;
+      sx = (img.width - sw) / 2;
+    } else {
+      sh = img.width / targetRatio;
+      sy = (img.height - sh) / 2;
+    }
+
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+    try {
+      callback(canvas.toDataURL("image/jpeg", 0.82));
+    } catch {
+      callback(srcUrl); // Fallback if external server blocks CORS canvas export
+    }
+  };
+  img.onerror = () => callback(srcUrl);
+  img.src = srcUrl;
+}
+
+window.__handleSlideFileUpload = (idx, inputEl) => {
+  const file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    cropSourceTo16x9DataUrl(e.target.result, (croppedDataUrl) => {
+      state.slides[idx].image = croppedDataUrl;
+      renderAdminSlidesEditor();
+    });
+  };
+  reader.readAsDataURL(file);
+};
+
+window.__cropSlideImageUrl = (idx) => {
+  const url = (state.slides[idx].image || "").trim();
+  if (!url) return;
+  cropSourceTo16x9DataUrl(url, (croppedDataUrl) => {
+    state.slides[idx].image = croppedDataUrl;
+    renderAdminSlidesEditor();
+  });
+};
+
+window.__toggleEditSlide = (idx) => {
+  state.editingSlideIndex = state.editingSlideIndex === idx ? -1 : idx;
+  renderAdminSlidesEditor();
+};
+
 function renderAdminSlidesEditor() {
   const wrap = document.getElementById("adminSlidesEditor");
-  wrap.innerHTML = state.slides.map((s, i) => `
-    <div style="border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: var(--bg);">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.74rem; color: var(--accent);">
-        <span>SLIDE #${i + 1}</span>
-        <button type="button" class="text-button" style="padding: 2px 7px;" onclick="window.__removeAdminSlide(${i})">✕</button>
+  wrap.innerHTML = state.slides.map((s, i) => {
+    const isEditing = state.editingSlideIndex === i;
+    return `
+      <div style="border: 1px solid var(--border); border-radius: 10px; padding: 9px; margin-bottom: 8px; background: var(--bg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.74rem; color: var(--accent);">
+          <span>SLIDE #${i + 1} ${s.ad_url ? "(CLICKABLE AD)" : "(IMAGE ONLY)"}</span>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="text-button" style="padding: 2px 8px;" onclick="window.__toggleEditSlide(${i})">${isEditing ? "DONE" : "EDIT"}</button>
+            <button type="button" class="text-button" style="padding: 2px 7px;" onclick="window.__removeAdminSlide(${i})">✕</button>
+          </div>
+        </div>
+        <div class="crop-preview-16-9">
+          ${s.image ? `<img src="${escapeHtml(s.image)}" alt="">` : `<span class="status-text">16:9 Preview</span>`}
+        </div>
+        ${isEditing ? `
+          <label class="text-button" style="display: block; text-align: center; margin-bottom: 8px;">
+            UPLOAD & CROP 16:9 IMAGE
+            <input type="file" accept="image/*" style="display: none;" onchange="window.__handleSlideFileUpload(${i}, this)">
+          </label>
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+            <input class="admin-input" style="margin-bottom: 0;" placeholder="Or paste Image URL..." value="${escapeHtml(s.image)}" onchange="state.slides[${i}].image = this.value">
+            <button type="button" class="text-button accent" onclick="window.__cropSlideImageUrl(${i})">CROP 16:9</button>
+          </div>
+          <input class="admin-input" placeholder="Sponsor Ad Redirect URL (leave empty for normal image)" value="${escapeHtml(s.ad_url || "")}" onchange="state.slides[${i}].ad_url = this.value">
+          <input class="admin-input" placeholder="Banner Label (optional)" value="${escapeHtml(s.title || "")}" onchange="state.slides[${i}].title = this.value">
+        ` : ""}
       </div>
-      <input class="admin-input" placeholder="Slide Title" value="${escapeHtml(s.title)}" onchange="state.slides[${i}].title = this.value">
-      <input class="admin-input" placeholder="Subtitle" value="${escapeHtml(s.subtitle)}" onchange="state.slides[${i}].subtitle = this.value">
-      <input class="admin-input" placeholder="Image URL (optional)" value="${escapeHtml(s.image)}" onchange="state.slides[${i}].image = this.value">
-      <input class="admin-input" placeholder="Search Query on Tap" value="${escapeHtml(s.query)}" onchange="state.slides[${i}].query = this.value">
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 document.getElementById("addAdminSlideBtn").addEventListener("click", () => {
-  state.slides.push({ title: "New Slide", subtitle: "", image: "", query: "Telugu hit songs", is_ad: false });
+  state.slides.push({ title: "New Banner", image: "", ad_url: "", is_ad: true });
+  state.editingSlideIndex = state.slides.length - 1;
   renderAdminSlidesEditor();
 });
 
 window.__removeAdminSlide = (i) => {
   state.slides.splice(i, 1);
+  if (state.editingSlideIndex === i) state.editingSlideIndex = -1;
   renderAdminSlidesEditor();
 };
 
 document.getElementById("saveAdminConfigBtn").addEventListener("click", async () => {
   const statusEl = document.getElementById("adminStatus");
   statusEl.textContent = "Publishing...";
+  const showAds = document.getElementById("adminShowAdsToggle").checked;
   try {
     const res = await fetch("/api/app_config", {
       method: "POST",
@@ -2023,6 +2153,7 @@ document.getElementById("saveAdminConfigBtn").addEventListener("click", async ()
         version: document.getElementById("adminVersionInput").value,
         announcement_title: document.getElementById("adminTitleInput").value,
         announcement_body: document.getElementById("adminBodyInput").value,
+        show_ads: showAds,
         slides: state.slides,
       }),
     });
@@ -2038,7 +2169,7 @@ document.getElementById("saveAdminConfigBtn").addEventListener("click", async ()
   }
 });
 
-/* Player & Background Playback Support */
+/* Player & Background Playback Persistence */
 function syncPlayPauseIcons(playing) {
   state.isPlaying = playing;
   const svg = playing ? PAUSE_SVG : PLAY_SVG;
@@ -2063,6 +2194,7 @@ window.onYouTubeIframeAPIReady = function () {
       modestbranding: 1,
       playsinline: 1,
       rel: 0,
+      origin: window.location.origin,
     },
     events: {
       onReady: () => {
@@ -2071,10 +2203,18 @@ window.onYouTubeIframeAPIReady = function () {
       },
       onStateChange: (event) => {
         if (event.data === YT.PlayerState.PLAYING) {
+          state.userPausedManually = false;
           syncPlayPauseIcons(true);
           updateMediaSession();
         } else if (event.data === YT.PlayerState.PAUSED) {
-          syncPlayPauseIcons(false);
+          // If browser auto-paused when switching apps (not user tap), resume immediately
+          if (document.hidden && !state.userPausedManually && state.currentTrack) {
+            setTimeout(() => {
+              if (!state.userPausedManually) ytPlayer?.playVideo?.();
+            }, 150);
+          } else {
+            syncPlayPauseIcons(false);
+          }
         } else if (event.data === YT.PlayerState.ENDED) {
           playNextFromQueue();
         }
@@ -2082,6 +2222,32 @@ window.onYouTubeIframeAPIReady = function () {
     },
   });
 };
+
+// Keep background playback alive when switching to Chrome or another app (stops only if closed)
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (state.isPlaying && !state.userPausedManually && ytPlayer && state.playerReady) {
+      setTimeout(() => {
+        if (!state.userPausedManually) ytPlayer.playVideo();
+      }, 200);
+    }
+  } else if (state.user) {
+    const raw = localStorage.getItem("tanang_session");
+    if (raw) {
+      try {
+        const sess = JSON.parse(raw);
+        if (Date.now() - Number(sess.last_active_at || 0) > FIFTEEN_DAYS_MS) {
+          clearSession();
+          state.token = null;
+          document.getElementById("authGate").classList.remove("hidden");
+          generateCaptcha();
+          return;
+        }
+      } catch {}
+    }
+    touchSessionActivity();
+  }
+});
 
 function updateMediaSession() {
   const track = state.currentTrack;
@@ -2091,8 +2257,14 @@ function updateMediaSession() {
     artist: decodeHtml(track.artist),
     artwork: track.thumbnail ? [{ src: track.thumbnail, sizes: "480x360", type: "image/jpeg" }] : [],
   });
-  navigator.mediaSession.setActionHandler("play", () => ytPlayer?.playVideo?.());
-  navigator.mediaSession.setActionHandler("pause", () => ytPlayer?.pauseVideo?.());
+  navigator.mediaSession.setActionHandler("play", () => {
+    state.userPausedManually = false;
+    ytPlayer?.playVideo?.();
+  });
+  navigator.mediaSession.setActionHandler("pause", () => {
+    state.userPausedManually = true;
+    ytPlayer?.pauseVideo?.();
+  });
   navigator.mediaSession.setActionHandler("previoustrack", playPrevTrack);
   navigator.mediaSession.setActionHandler("nexttrack", playNextFromQueue);
 }
@@ -2126,6 +2298,7 @@ function playTrackNow(track, pushPrev = true) {
     state.history.push(state.currentTrack);
   }
   state.currentTrack = track;
+  state.userPausedManually = false;
 
   document.getElementById("currentTitle").textContent = decodeHtml(track.title);
   document.getElementById("currentChannel").textContent = decodeHtml(track.artist);
@@ -2159,7 +2332,13 @@ function playPrevTrack() {
 
 function togglePlayPause() {
   if (!ytPlayer || !state.playerReady) return;
-  state.isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+  if (state.isPlaying) {
+    state.userPausedManually = true;
+    ytPlayer.pauseVideo();
+  } else {
+    state.userPausedManually = false;
+    ytPlayer.playVideo();
+  }
 }
 
 document.getElementById("playPauseButton").addEventListener("click", togglePlayPause);
@@ -2285,7 +2464,7 @@ async function performSearch(saveToHistory = true) {
     const handleSelect = async () => {
       if (longPressed) return;
       if (isPl && item.playlistId) {
-        statusEl.textContent = "Loading playlist...";
+        statusEl.textContent = "Loading full playlist...";
         await window.__openSearchedPlaylist(item.playlistId);
         return;
       }
@@ -2427,7 +2606,7 @@ document.getElementById("clearQueueButton").addEventListener("click", () => {
   renderQueue();
 });
 
-/* Library Tabs & Importer */
+/* Library Tabs & Full Playlist Importer */
 document.querySelectorAll(".lib-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".lib-tab").forEach((t) => t.classList.remove("active"));
@@ -2527,7 +2706,7 @@ document.getElementById("importPlaylistBtn").addEventListener("click", async () 
   const statusEl = document.getElementById("importStatus");
   if (!url) return;
 
-  statusEl.textContent = "Importing playlist tracks...";
+  statusEl.textContent = "Importing all tracks from playlist...";
   try {
     const res = await fetch("/api/import_playlist", {
       method: "POST",

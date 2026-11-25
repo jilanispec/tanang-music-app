@@ -11,7 +11,6 @@
   <link rel="manifest" href="/manifest.json">
   <title>TANANG MUSIC</title>
   <style>
-    /* Custom Typography from public/assets/ */
     @font-face {
       font-family: "GoEagles";
       src: url("/assets/goeagles.ttf") format("truetype");
@@ -98,9 +97,9 @@
       background: #facc15;
     }
     .logo-circle.sm { width: 34px; height: 34px; }
-    .logo-circle.lg { width: 80px; height: 80px; margin: 0 auto 12px; box-shadow: 0 6px 24px rgba(250, 204, 21, 0.25); }
+    .logo-circle.lg { width: 78px; height: 78px; margin: 0 auto 10px; box-shadow: 0 6px 24px rgba(250, 204, 21, 0.25); }
 
-    /* Auth Overlay */
+    /* Auth + Human Captcha Overlay */
     .auth-overlay {
       position: fixed;
       inset: 0;
@@ -111,7 +110,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 18px;
+      overflow-y: auto;
     }
     .auth-overlay.hidden { display: none; }
 
@@ -120,21 +120,17 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 22px;
-      padding: 24px 20px;
+      padding: 20px 18px;
       text-align: center;
     }
     .auth-brand-title {
       font-family: "GoEagles", sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       letter-spacing: 0.08em;
       margin: 0 0 4px;
     }
     .auth-brand-title span { color: var(--accent); }
-    .auth-sub {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
+    .auth-sub { margin: 0 0 14px; color: var(--muted); font-size: 0.84rem; }
 
     .auth-mode-tabs {
       display: grid;
@@ -143,7 +139,7 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 4px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .auth-tab {
       padding: 9px;
@@ -155,23 +151,70 @@
       font-size: 0.85rem;
       cursor: pointer;
     }
-    .auth-tab.active {
-      background: var(--accent);
-      color: #090909;
-    }
+    .auth-tab.active { background: var(--accent); color: #090909; }
 
-    .auth-box input {
+    .auth-box input[type="text"],
+    .auth-box input[type="password"] {
       width: 100%;
       background: var(--bg);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 13px 14px;
-      margin-bottom: 11px;
-      font-size: 0.95rem;
+      padding: 12px 13px;
+      margin-bottom: 10px;
+      font-size: 0.94rem;
       outline: none;
     }
     .auth-box input:focus { border-color: var(--accent); }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 2px 0 10px;
+    }
+    .remember-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .captcha-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .captcha-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .captcha-code-pill {
+      background: var(--surface-2);
+      border: 1px dashed var(--accent);
+      color: var(--text);
+      padding: 3px 9px;
+      border-radius: 7px;
+      letter-spacing: 0.14em;
+      font-weight: 900;
+      font-size: 0.84rem;
+    }
+    .captcha-box input {
+      margin-bottom: 0 !important;
+      padding: 9px 11px !important;
+      font-size: 0.88rem !important;
+    }
 
     .auth-submit-btn {
       width: 100%;
@@ -181,18 +224,17 @@
       background: var(--accent);
       color: #090909;
       font-weight: 900;
-      font-size: 0.95rem;
+      font-size: 0.94rem;
       cursor: pointer;
     }
-
     .auth-status {
-      margin: 12px 0 0;
-      font-size: 0.82rem;
+      margin: 10px 0 0;
+      font-size: 0.8rem;
       color: var(--accent);
       min-height: 1.2em;
     }
 
-    /* Fixed Non-Scrolling Top Bar (GoEagles Font) */
+    /* Fixed Non-Scrolling Top Bar */
     .topbar {
       position: fixed;
       top: 0;
@@ -200,26 +242,45 @@
       transform: translateX(-50%);
       width: 100%;
       max-width: 460px;
-      height: 58px;
+      height: 56px;
       z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 14px;
       background: rgba(9, 9, 9, 0.97);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
+    .topbar-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .back-nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .back-nav-btn:disabled { opacity: 0.35; cursor: default; }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
       color: var(--text);
       text-decoration: none;
       font-family: "GoEagles", sans-serif;
       letter-spacing: 0.06em;
-      font-size: 1.08rem;
+      font-size: 1.05rem;
     }
     .brand b { color: var(--accent); font-weight: normal; }
 
@@ -231,27 +292,23 @@
       background: var(--accent-soft);
       color: var(--accent);
       border: 1px solid rgba(250, 204, 21, 0.35);
-      letter-spacing: 0.06em;
     }
 
-    /* Offset main content for fixed top header & fixed bottom nav */
-    .app-main { padding: 72px 14px 156px; }
-
+    .app-main { padding: 70px 14px 156px; }
     .page { display: none; }
     .page.active { display: block; }
 
-    /* Greetings (Nexa-Heavy) & User Name (Adjust-smile) */
+    /* Greetings & Headings */
     .greeting-row {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      margin: 0 0 4px;
+      margin: 0 0 3px;
       font-family: "NexaHeavy", sans-serif;
       font-size: 0.78rem;
       letter-spacing: 0.1em;
       color: var(--accent);
       text-transform: uppercase;
-      line-height: 1.2;
     }
     .greeting-icon {
       width: 17px;
@@ -262,39 +319,27 @@
       color: var(--accent);
       overflow: visible;
     }
-    .greeting-icon svg {
-      width: 16px;
-      height: 16px;
-      overflow: visible;
-    }
+    .greeting-icon svg { width: 16px; height: 16px; overflow: visible; }
 
     .user-name-title {
-      margin: 0 0 4px;
+      margin: 0 0 3px;
       font-family: "AdjustSmile", cursive, sans-serif;
-      font-size: 1.85rem;
+      font-size: 1.82rem;
       font-weight: normal;
       line-height: 1.15;
     }
     .user-name-title span { color: var(--accent); }
 
-    /* Side / Section Headings (Maximum-impact) */
-    .side-heading {
-      font-family: "MaximumImpact", sans-serif;
-      letter-spacing: 0.07em;
-      font-weight: normal;
-      text-transform: uppercase;
-    }
-
     .page-title-heading {
       margin: 0 0 6px;
       font-family: "MaximumImpact", sans-serif;
-      font-size: 1.55rem;
+      font-size: 1.5rem;
       letter-spacing: 0.05em;
       font-weight: normal;
     }
     .page-title-heading span { color: var(--accent); }
 
-    .welcome p.sub-greeting { margin: 0; color: var(--muted); font-size: 0.85rem; }
+    .welcome p.sub-greeting { margin: 0; color: var(--muted); font-size: 0.84rem; }
 
     .section-heading, .results-heading {
       display: flex;
@@ -305,21 +350,20 @@
     .section-heading h2, .results-heading h2 {
       margin: 0;
       font-family: "MaximumImpact", sans-serif;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       letter-spacing: 0.08em;
       font-weight: normal;
       color: var(--muted);
     }
-    .playing-status { font-size: 0.74rem; font-weight: 800; color: var(--accent); }
+    .playing-status { font-size: 0.73rem; font-weight: 800; color: var(--accent); }
 
-    /* Player Card (Clean Video Crop — No YouTube Overlays) */
+    /* Player Card */
     .player-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 13px;
     }
-
     .video-frame {
       position: relative;
       width: 100%;
@@ -329,7 +373,6 @@
       background: #050506;
       border: 1px solid var(--border);
     }
-    /* Scale slightly and disable iframe pointer overlays so YouTube UI watermarks/instructions never show */
     .video-crop-wrap {
       position: absolute;
       inset: -14%;
@@ -344,7 +387,7 @@
       display: block;
       border: 0;
     }
-    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 3.6; }
+    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 3.5; }
 
     .video-placeholder {
       position: absolute;
@@ -371,20 +414,19 @@
     .track-info { flex: 1; min-width: 0; }
     .track-info h2 {
       margin: 0;
-      font-size: 1rem;
+      font-size: 0.98rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .track-info p {
       margin: 3px 0 0;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .dots-btn {
       width: 36px;
       height: 36px;
@@ -416,7 +458,6 @@
       gap: 8px;
       margin: 10px 0;
     }
-
     .icon-button {
       width: 44px;
       height: 44px;
@@ -450,7 +491,6 @@
       gap: 8px;
       margin-top: 8px;
     }
-
     .video-mode-button {
       width: 100%;
       padding: 10px;
@@ -460,11 +500,9 @@
       color: var(--text);
       font-weight: 800;
       font-size: 0.74rem;
-      letter-spacing: 0.05em;
       cursor: pointer;
     }
 
-    /* Inline Queue Drawer */
     .inline-queue-drawer {
       margin-top: 10px;
       background: var(--bg);
@@ -483,16 +521,14 @@
       color: var(--accent);
     }
     .inline-queue-scroll {
-      max-height: 175px;
+      max-height: 170px;
       overflow-y: auto;
       display: grid;
       gap: 7px;
     }
 
-    /* Slidable Dashboard Carousel (1 · 2 · 3...) */
-    .carousel-wrap {
-      margin-top: 14px;
-    }
+    /* Clean Non-Overlapping Slidable Carousel (1 · 2 · 3) */
+    .carousel-wrap { margin-top: 14px; }
     .carousel-track {
       display: flex;
       overflow-x: auto;
@@ -505,41 +541,25 @@
     .carousel-slide {
       flex: 0 0 100%;
       scroll-snap-align: start;
-      border-radius: 16px;
+      border-radius: 14px;
       border: 1px solid var(--border);
-      background: linear-gradient(135deg, #17171c 0%, #0e0e11 100%);
-      overflow: hidden;
-      position: relative;
-      min-height: 132px;
+      background: var(--surface);
+      padding: 11px;
       display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 14px;
+      align-items: center;
+      gap: 11px;
       cursor: pointer;
     }
-    .carousel-slide img.slide-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+    .slide-square-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
       object-fit: cover;
-      opacity: 0.48;
-      pointer-events: none;
+      background: var(--surface-2);
+      flex-shrink: 0;
+      border: 1px solid var(--border);
     }
-    .carousel-slide-content {
-      position: relative;
-      z-index: 2;
-    }
-    .slide-tag {
-      display: inline-block;
-      font-size: 0.65rem;
-      font-weight: 900;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: var(--accent);
-      color: #090909;
-      margin-bottom: 5px;
-    }
+    .carousel-slide-content { flex: 1; min-width: 0; }
     .carousel-dots {
       display: flex;
       align-items: center;
@@ -563,56 +583,42 @@
       border-color: var(--accent);
     }
 
-    /* Square Playlist Cards Grid (Algorithmic Recommendations) */
-    .playlist-square-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+    /* Spotify-Style Compact Square Playlist Row / Strip */
+    .spotify-playlist-strip {
+      display: flex;
       gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
     }
-    .square-pl-card {
+    .spotify-playlist-strip::-webkit-scrollbar { display: none; }
+    .sp-pl-card {
+      flex: 0 0 112px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 9px;
+      border-radius: 12px;
+      padding: 7px;
       cursor: pointer;
     }
-    .square-pl-card:active { background: var(--surface-2); }
-    .square-thumb-box {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #1a1a1f;
-      position: relative;
-      margin-bottom: 8px;
-    }
-    .square-thumb-box img {
-      width: 100%;
-      height: 100%;
+    .sp-pl-card:active { background: var(--surface-2); }
+    .sp-pl-thumb {
+      width: 96px;
+      height: 96px;
+      border-radius: 8px;
       object-fit: cover;
       display: block;
+      background: var(--surface-2);
+      margin-bottom: 6px;
     }
-    .square-pl-badge {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      background: rgba(9, 9, 9, 0.88);
-      color: var(--accent);
-      border: 1px solid rgba(250, 204, 21, 0.45);
-      font-size: 0.62rem;
-      font-weight: 900;
-      padding: 2px 6px;
-      border-radius: 5px;
-    }
-    .square-pl-title {
-      font-size: 0.82rem;
+    .sp-pl-title {
+      font-size: 0.78rem;
       font-weight: 800;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .square-pl-sub {
-      font-size: 0.72rem;
+    .sp-pl-sub {
+      font-size: 0.68rem;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
@@ -620,7 +626,82 @@
       margin-top: 2px;
     }
 
-    /* Search & Filter Chips */
+    /* Search Bar with Back Arrow + Last 10 Searches */
+    .search-box, .create-playlist-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 8px 6px 8px;
+    }
+    .search-back-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .search-box input, .create-playlist-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.94rem;
+      outline: none;
+    }
+    .search-box button.go-btn, .create-playlist-box button {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      color: #090909;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .history-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+    .history-panel.hidden { display: none; }
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 6px;
+      border-top: 1px solid var(--border);
+      font-size: 0.86rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .history-item:first-of-type { border-top: none; }
+    .history-item:active { background: var(--surface-2); }
+
     .filter-row {
       display: flex;
       gap: 7px;
@@ -646,38 +727,6 @@
       border-color: var(--accent);
     }
 
-    .search-box, .create-playlist-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 6px 8px 6px 12px;
-    }
-    .search-box input, .create-playlist-box input {
-      flex: 1;
-      min-width: 0;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 0.94rem;
-      outline: none;
-    }
-    .search-box button, .create-playlist-box button {
-      width: 38px;
-      height: 38px;
-      border-radius: 9px;
-      border: none;
-      background: var(--accent);
-      color: #090909;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
     .status-text { color: var(--muted); font-size: 0.82rem; }
     .text-button {
       background: var(--surface-2);
@@ -695,7 +744,6 @@
       border: none;
     }
 
-    /* Song Row & Square Thumbnail Variant for Playlists in Search */
     .song-list { display: grid; gap: 9px; }
     .song-item {
       display: flex;
@@ -718,12 +766,11 @@
       border-radius: 7px;
       flex-shrink: 0;
     }
-    /* Square Thumbnail Box so User Identifies Playlists Immediately */
+    /* Small Square Thumbnail Box Only (Spotify Style) */
     .song-item.is-playlist-row img {
-      width: 52px;
-      height: 52px;
-      border-radius: 9px;
-      border: 1.5px solid var(--accent);
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
     }
     .song-meta { flex: 1 1 auto; min-width: 0; overflow: hidden; }
     .song-title {
@@ -759,7 +806,6 @@
       border: none;
     }
 
-    /* Library Quick Tabs */
     .lib-tabs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -829,7 +875,7 @@
       font-size: 0.85rem;
     }
 
-    /* Bottom Action Sheet */
+    /* Action Sheet */
     .sheet-backdrop {
       position: fixed;
       inset: 0;
@@ -971,7 +1017,7 @@
 <body>
 <div class="mobile-shell">
 
-  <!-- Login & Attractive Register Overlay -->
+  <!-- Login / Register + Human Captcha Overlay -->
   <div class="auth-overlay" id="authGate">
     <div class="auth-box">
       <img src="/logo-circle.png" alt="TANANG MUSIC" class="logo-circle lg" onerror="this.style.display='none'">
@@ -987,17 +1033,42 @@
       <input id="authUsername" type="text" placeholder="Username" autocomplete="username">
       <input id="authSecret" type="password" placeholder="Password (6+ chars)" autocomplete="current-password">
 
+      <div class="remember-row">
+        <label>
+          <input type="checkbox" id="rememberMeCheck" checked style="accent-color: var(--accent);">
+          <span>Remember me until logout</span>
+        </label>
+        <span>15d auto-idle lock</span>
+      </div>
+
+      <!-- Human Verification Captcha -->
+      <div class="captcha-box">
+        <div class="captcha-top">
+          <span>VERIFY HUMAN</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <span class="captcha-code-pill" id="captchaCodeLabel">7A4M</span>
+            <button type="button" class="text-button" id="refreshCaptchaBtn" style="padding: 2px 7px;">↻</button>
+          </span>
+        </div>
+        <input id="captchaInput" type="text" placeholder="Type the code above to verify" autocomplete="off">
+      </div>
+
       <button type="button" class="auth-submit-btn" id="authSubmitBtn">Sign In</button>
       <p class="auth-status" id="authStatus"></p>
     </div>
   </div>
 
-  <!-- Fixed Non-Scrolling Top Bar (GoEagles Font) -->
+  <!-- Fixed Non-Scrolling Top Bar with Step-by-Step Back Button -->
   <header class="topbar">
-    <a class="brand" href="#" data-go="homePage">
-      <img src="/logo-circle.png" alt="" class="logo-circle sm" onerror="this.style.display='none'">
-      <span>TANANG <b>MUSIC</b></span>
-    </a>
+    <div class="topbar-left">
+      <button type="button" class="back-nav-btn" id="globalBackBtn" aria-label="Go back" disabled>
+        <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <a class="brand" href="#" data-go="homePage">
+        <img src="/logo-circle.png" alt="" class="logo-circle sm" onerror="this.style.display='none'">
+        <span>TANANG <b>MUSIC</b></span>
+      </a>
+    </div>
     <div class="room-badge" id="versionBadge">v2.2</div>
   </header>
 
@@ -1005,12 +1076,10 @@
     <!-- HOME / DASHBOARD PAGE -->
     <section class="page active" id="homePage">
       <div class="welcome">
-        <!-- Greeting with Nexa-Heavy + Perfectly Aligned Inline SVG Icon -->
         <div class="greeting-row">
           <span class="greeting-icon" id="greetingIcon"></span>
           <span id="greetingText">GOOD DAY</span>
         </div>
-        <!-- User Name with Adjust-smile Font -->
         <h1 class="user-name-title" id="greetingHeadline">Hello, <span>Listener.</span></h1>
         <p class="sub-greeting">Your music, your vibe.</p>
       </div>
@@ -1078,7 +1147,6 @@
           </button>
         </div>
 
-        <!-- Scrollable & Closable Queue Drawer -->
         <div class="inline-queue-drawer hidden" id="inlineQueueDrawer">
           <div class="inline-queue-header">
             <span>UP NEXT (SCROLLABLE)</span>
@@ -1088,20 +1156,20 @@
         </div>
       </div>
 
-      <!-- Slidable Dashboard Carousel (1 · 2 · 3...) with Images & Ads -->
+      <!-- Slidable Dashboard Carousel (1 · 2 · 3) -->
       <div class="carousel-wrap">
         <div class="carousel-track" id="dashboardCarousel"></div>
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <!-- Algorithmic Recommended Playlists (Square Boxes) -->
+      <!-- Spotify-Style Compact Square Playlist Cards -->
       <div class="section-heading">
-        <h2>FOR YOU · PLAYLISTS</h2>
-        <span class="status-text" style="font-size: 0.72rem;">BASED ON SEARCHES</span>
+        <h2>RECOMMENDED PLAYLISTS</h2>
+        <span class="status-text" style="font-size: 0.72rem;">FOR YOU</span>
       </div>
-      <div class="playlist-square-grid" id="recommendedPlaylistsGrid"></div>
+      <div class="spotify-playlist-strip" id="recommendedPlaylistsGrid"></div>
 
-      <!-- Updates Section at Bottom of Dashboard with Published Date & Time -->
+      <!-- Updates Section at Bottom -->
       <div class="updates-footer-card" id="updatesCard">
         <span class="updates-badge" id="updateVersionTag">UPDATE v2.2</span>
         <div class="update-timestamp" id="updatePublishedAt">Published: Nov 25, 2026</div>
@@ -1120,11 +1188,22 @@
       </div>
 
       <div class="search-box">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <button type="button" class="search-back-btn" id="searchInnerBackBtn" aria-label="Back to recent searches">
+          <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
         <input id="searchInput" type="search" placeholder="Movie, hero, album, or song..." autocomplete="off">
-        <button id="searchButton" aria-label="Search">
+        <button type="button" class="go-btn" id="searchButton" aria-label="Search">
           <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
         </button>
+      </div>
+
+      <!-- Recent Searches (Last 10 · Long-press 1 to delete · Clear All button) -->
+      <div class="history-panel" id="searchHistoryPanel">
+        <div class="history-header">
+          <span>RECENT SEARCHES (UP TO 10 · HOLD TO DELETE)</span>
+          <button type="button" class="text-button" id="clearAllHistoryBtn" style="padding: 3px 8px;">CLEAR ALL</button>
+        </div>
+        <div id="searchHistoryList"></div>
       </div>
 
       <div class="filter-row" id="searchFilterRow">
@@ -1210,7 +1289,7 @@
       </div>
 
       <div class="settings-card" style="margin-top: 0;">
-        <h2 class="side-heading" style="margin: 0 0 4px;">APP PREFERENCES</h2>
+        <h2 style="margin: 0 0 4px; font-family: 'MaximumImpact', sans-serif; font-weight: normal;">APP PREFERENCES</h2>
         <p class="status-text" style="margin: 0 0 10px;">Tailor playback and storage on your device.</p>
 
         <div class="settings-row">
@@ -1239,7 +1318,6 @@
         </div>
       </div>
 
-      <!-- Step 1: Enter Admin Key Box (Hidden until Admin Access button is tapped) -->
       <div class="settings-card" id="adminKeyGateCard" style="display: none;">
         <span class="updates-badge">ADMIN SIGN IN</span>
         <p class="status-text" style="margin: 4px 0 10px;">Enter your Admin Key to unlock the global editor.</p>
@@ -1250,10 +1328,9 @@
         <p class="status-text" id="adminGateStatus" style="margin: 8px 0 0;"></p>
       </div>
 
-      <!-- Step 2: Full Admin Controls (Shown ONLY after key verification) -->
       <div class="settings-card" id="adminControlsCard" style="display: none;">
         <span class="updates-badge">ADMIN EDITOR</span>
-        <h2 class="side-heading" style="margin: 4px 0;">PUBLISH UPDATES, SLIDES & ADS</h2>
+        <h2 style="margin: 4px 0; font-family: 'MaximumImpact', sans-serif; font-weight: normal;">PUBLISH UPDATES & SLIDES</h2>
         <p class="status-text" style="margin: 0 0 10px;">Changes publish live to all users with timestamp.</p>
 
         <input id="adminVersionInput" class="admin-input" type="text" placeholder="App Version (e.g. v2.3)">
@@ -1261,11 +1338,11 @@
         <textarea id="adminBodyInput" class="admin-input" rows="2" placeholder="Update message shown to all users..."></textarea>
 
         <div style="margin: 8px 0 6px; font-size: 0.74rem; font-weight: 800; color: var(--accent);">
-          DASHBOARD SLIDES & ADS (1 · 2 · 3)
+          DASHBOARD SLIDES (1 · 2 · 3)
         </div>
         <div id="adminSlidesEditor"></div>
         <button type="button" class="text-button" id="addAdminSlideBtn" style="width: 100%; margin-bottom: 10px;">
-          + ADD SLIDE / AD CARD
+          + ADD SLIDE
         </button>
 
         <button type="button" class="text-button accent" id="saveAdminConfigBtn" style="width: 100%; padding: 11px;">
@@ -1294,7 +1371,7 @@
     </button>
   </div>
 
-  <!-- Bottom Action Sheet -->
+  <!-- Action Sheet -->
   <div class="sheet-backdrop hidden" id="actionSheetBackdrop">
     <div class="action-sheet">
       <div class="sheet-track-header">
@@ -1360,12 +1437,17 @@ const MORNING_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2v3M4.9 4.9l2.1 2.1M2
 const AFTERNOON_SVG = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
 const EVENING_SVG = `<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`;
 
+const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
+
 const state = {
   user: null,
   displayName: "Listener",
   token: null,
   authMode: "login",
   authBusy: false,
+  captchaCode: "",
+  navStack: ["homePage"],
+  currentPage: "homePage",
   currentTrack: null,
   history: [],
   queue: [],
@@ -1401,6 +1483,112 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+/* Human Verification Captcha */
+function generateCaptcha() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  state.captchaCode = code;
+  document.getElementById("captchaCodeLabel").textContent = code;
+  document.getElementById("captchaInput").value = "";
+}
+document.getElementById("refreshCaptchaBtn").addEventListener("click", generateCaptcha);
+
+/* Session Persistence (APK + Remember Me + 15-Day Idle Auto-Logout) */
+function isStandaloneApp() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true ||
+    document.referrer.startsWith("android-app://")
+  );
+}
+
+function touchSessionActivity() {
+  const raw = localStorage.getItem("tanang_session");
+  if (!raw) return;
+  try {
+    const sess = JSON.parse(raw);
+    sess.last_active_at = Date.now();
+    localStorage.setItem("tanang_session", JSON.stringify(sess));
+  } catch {}
+}
+
+function saveSession(user, displayName, token, rememberMe) {
+  const payload = {
+    username: user,
+    display_name: displayName,
+    token,
+    remember: Boolean(rememberMe || isStandaloneApp()),
+    last_active_at: Date.now(),
+  };
+  localStorage.setItem("tanang_session", JSON.stringify(payload));
+}
+
+function clearSession() {
+  localStorage.removeItem("tanang_session");
+}
+
+async function restoreSessionIfValid() {
+  const raw = localStorage.getItem("tanang_session");
+  if (!raw) {
+    generateCaptcha();
+    return;
+  }
+  try {
+    const sess = JSON.parse(raw);
+    const now = Date.now();
+    const idleTime = now - Number(sess.last_active_at || 0);
+
+    // Auto logout if inactive for more than 15 days
+    if (idleTime > FIFTEEN_DAYS_MS) {
+      clearSession();
+      generateCaptcha();
+      document.getElementById("authStatus").textContent = "Session expired after 15 days of inactivity. Please login.";
+      return;
+    }
+
+    // Only auto-login when installed as app (APK) or when Remember Me was checked
+    if ((sess.remember || isStandaloneApp()) && sess.username && sess.token) {
+      sess.last_active_at = now;
+      localStorage.setItem("tanang_session", JSON.stringify(sess));
+      state.user = sess.username;
+      state.displayName = sess.display_name || sess.username;
+      state.token = sess.token;
+      document.getElementById("settingsUser").textContent = `${state.displayName} (@${state.user})`;
+      updateGreeting(state.displayName);
+      document.getElementById("authGate").classList.add("hidden");
+      await syncUserLibraryFromCloud();
+      await loadRecommendedPlaylists();
+    } else {
+      generateCaptcha();
+    }
+  } catch {
+    generateCaptcha();
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && state.user) {
+    const raw = localStorage.getItem("tanang_session");
+    if (raw) {
+      try {
+        const sess = JSON.parse(raw);
+        if (Date.now() - Number(sess.last_active_at || 0) > FIFTEEN_DAYS_MS) {
+          clearSession();
+          state.token = null;
+          document.getElementById("authGate").classList.remove("hidden");
+          generateCaptcha();
+          return;
+        }
+      } catch {}
+    }
+    touchSessionActivity();
+  }
+});
+
+/* Greetings */
 function updateGreeting(name) {
   const hour = new Date().getHours();
   let greet = "GOOD EVENING";
@@ -1417,25 +1605,49 @@ function updateGreeting(name) {
   document.getElementById("greetingHeadline").innerHTML = `Hello, <span>${escapeHtml(name)}.</span>`;
 }
 
-function goToPage(pageId) {
+/* Step-by-Step Back Navigation Stack */
+function renderActivePage(pageId) {
+  state.currentPage = pageId;
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
   document.getElementById(pageId)?.classList.add("active");
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.page === pageId);
   });
+  document.getElementById("globalBackBtn").disabled = state.navStack.length <= 1;
+  touchSessionActivity();
 }
 
+function goToPage(pageId, pushHistory = true) {
+  if (!pageId) return;
+  if (pageId === state.currentPage) {
+    renderActivePage(pageId);
+    return;
+  }
+  if (pushHistory) {
+    state.navStack.push(pageId);
+  }
+  renderActivePage(pageId);
+}
+
+function goStepBack() {
+  if (state.navStack.length <= 1) return;
+  state.navStack.pop();
+  const prevPage = state.navStack[state.navStack.length - 1] || "homePage";
+  renderActivePage(prevPage);
+}
+
+document.getElementById("globalBackBtn").addEventListener("click", goStepBack);
 document.querySelectorAll("[data-page]").forEach((btn) => {
-  btn.addEventListener("click", () => goToPage(btn.dataset.page));
+  btn.addEventListener("click", () => goToPage(btn.dataset.page, true));
 });
 document.querySelectorAll("[data-go]").forEach((el) => {
   el.addEventListener("click", (e) => {
     e.preventDefault();
-    goToPage(el.dataset.go);
+    goToPage(el.dataset.go, true);
   });
 });
 
-/* Auth Mode Switch */
+/* Auth Mode Switch & Submit */
 function setAuthMode(mode) {
   state.authMode = mode;
   document.getElementById("tabLogin").classList.toggle("active", mode === "login");
@@ -1447,6 +1659,7 @@ function setAuthMode(mode) {
       : "Welcome back. Sign in to your personal space.";
   document.getElementById("authSubmitBtn").textContent = mode === "register" ? "Create Account" : "Sign In";
   document.getElementById("authStatus").textContent = "";
+  generateCaptcha();
 }
 
 document.getElementById("tabLogin").addEventListener("click", () => setAuthMode("login"));
@@ -1457,6 +1670,8 @@ async function submitAuth() {
   const displayName = document.getElementById("authDisplayName").value.trim();
   const username = document.getElementById("authUsername").value.trim();
   const password = document.getElementById("authSecret").value;
+  const captchaTyped = document.getElementById("captchaInput").value.trim().toUpperCase();
+  const rememberMe = document.getElementById("rememberMeCheck").checked;
   const statusEl = document.getElementById("authStatus");
 
   if (!username || password.length < 6) {
@@ -1465,6 +1680,11 @@ async function submitAuth() {
   }
   if (state.authMode === "register" && !displayName) {
     statusEl.textContent = "Please enter your name for your dashboard.";
+    return;
+  }
+  if (!captchaTyped || captchaTyped !== state.captchaCode) {
+    statusEl.textContent = "Human check failed. Enter the matching code.";
+    generateCaptcha();
     return;
   }
 
@@ -1485,12 +1705,15 @@ async function submitAuth() {
     const data = await res.json();
     if (!res.ok || !data.authenticated) {
       statusEl.textContent = data.error || "Authentication failed.";
+      generateCaptcha();
       return;
     }
 
     state.user = data.username || username.toLowerCase();
     state.displayName = data.display_name || displayName || username;
     state.token = data.token;
+    saveSession(state.user, state.displayName, state.token, rememberMe);
+
     document.getElementById("settingsUser").textContent = `${state.displayName} (@${state.user})`;
     updateGreeting(state.displayName);
     document.getElementById("authGate").classList.add("hidden");
@@ -1505,12 +1728,14 @@ async function submitAuth() {
 
 document.getElementById("authSubmitBtn").addEventListener("click", submitAuth);
 document.getElementById("logoutBtn").addEventListener("click", () => {
+  clearSession();
   state.token = null;
   document.getElementById("authSecret").value = "";
   document.getElementById("authGate").classList.remove("hidden");
+  generateCaptcha();
 });
 
-/* Cloud Library & Algorithmic Search History */
+/* Cloud Library & Recent Searches (Up to 10) */
 async function syncUserLibraryFromCloud() {
   if (!state.user) return;
   try {
@@ -1520,14 +1745,16 @@ async function syncUserLibraryFromCloud() {
       state.liked = lib.liked || [];
       state.favorites = lib.favorites || [];
       state.playlists = lib.playlists || [];
-      state.recentQueries = lib.recent_queries || [];
+      state.recentQueries = (lib.recent_queries || []).slice(0, 10);
     }
   } catch {}
+  renderRecentSearches();
   renderLibraryViews();
   updateMiniPlayer();
 }
 
 async function saveUserLibraryToCloud() {
+  renderRecentSearches();
   renderLibraryViews();
   updateMiniPlayer();
   if (!state.user) return;
@@ -1540,12 +1767,86 @@ async function saveUserLibraryToCloud() {
         liked: state.liked,
         favorites: state.favorites,
         playlists: state.playlists,
-        recent_queries: state.recentQueries,
+        recent_queries: state.recentQueries.slice(0, 10),
       }),
     });
   } catch {}
 }
 
+function recordSearchQuery(q) {
+  const cleaned = q.trim();
+  if (!cleaned) return;
+  state.recentQueries = [
+    cleaned,
+    ...state.recentQueries.filter((item) => item.toLowerCase() !== cleaned.toLowerCase()),
+  ].slice(0, 10);
+  saveUserLibraryToCloud();
+}
+
+function renderRecentSearches() {
+  const panel = document.getElementById("searchHistoryPanel");
+  const listEl = document.getElementById("searchHistoryList");
+  if (!state.recentQueries.length) {
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  listEl.innerHTML = "";
+
+  state.recentQueries.forEach((term, idx) => {
+    const row = document.createElement("div");
+    row.className = "history-item";
+    row.innerHTML = `<span>${escapeHtml(term)}</span><span style="color: var(--muted); font-size: 0.72rem;">↺</span>`;
+
+    let timer = null;
+    let didLongPress = false;
+    row.addEventListener("touchstart", () => {
+      didLongPress = false;
+      timer = setTimeout(() => {
+        didLongPress = true;
+        state.recentQueries.splice(idx, 1);
+        saveUserLibraryToCloud();
+      }, 500);
+    }, { passive: true });
+    row.addEventListener("touchend", () => clearTimeout(timer));
+    row.addEventListener("touchmove", () => clearTimeout(timer));
+    row.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      state.recentQueries.splice(idx, 1);
+      saveUserLibraryToCloud();
+    });
+
+    row.addEventListener("click", () => {
+      if (didLongPress) return;
+      document.getElementById("searchInput").value = term;
+      performSearch(false);
+    });
+
+    listEl.appendChild(row);
+  });
+}
+
+document.getElementById("clearAllHistoryBtn").addEventListener("click", () => {
+  state.recentQueries = [];
+  saveUserLibraryToCloud();
+});
+
+document.getElementById("searchInput").addEventListener("focus", () => {
+  if (state.recentQueries.length) {
+    document.getElementById("searchHistoryPanel").classList.remove("hidden");
+  }
+});
+
+/* Left Back Arrow Inside Search Returns to Recent Searches List */
+document.getElementById("searchInnerBackBtn").addEventListener("click", () => {
+  document.getElementById("searchResults").innerHTML = "";
+  document.getElementById("searchStatus").textContent = "Recent searches";
+  if (state.recentQueries.length) {
+    document.getElementById("searchHistoryPanel").classList.remove("hidden");
+  }
+});
+
+/* Spotify-Style Compact Square Recommended Playlists */
 async function loadRecommendedPlaylists() {
   const seed = state.recentQueries[0] || "Telugu hit songs";
   const grid = document.getElementById("recommendedPlaylistsGrid");
@@ -1558,13 +1859,10 @@ async function loadRecommendedPlaylists() {
       return;
     }
     grid.innerHTML = lists.map((pl) => `
-      <div class="square-pl-card" onclick="window.__openSearchedPlaylist('${pl.playlistId}')">
-        <div class="square-thumb-box">
-          <img src="${pl.thumbnail || ""}" alt="">
-          <span class="square-pl-badge">PLAYLIST</span>
-        </div>
-        <div class="square-pl-title">${escapeHtml(pl.title)}</div>
-        <div class="square-pl-sub">${escapeHtml(pl.artist)}</div>
+      <div class="sp-pl-card" onclick="window.__openSearchedPlaylist('${pl.playlistId}')">
+        <img class="sp-pl-thumb" src="${pl.thumbnail || "/logo-circle.png"}" alt="">
+        <div class="sp-pl-title">${escapeHtml(pl.title)}</div>
+        <div class="sp-pl-sub">${escapeHtml(pl.artist)}</div>
       </div>
     `).join("");
   } catch {}
@@ -1581,12 +1879,12 @@ window.__openSearchedPlaylist = async (playlistId) => {
       const [first, ...rest] = tracks;
       state.queue = [...rest];
       playTrackNow(first, true);
-      goToPage("homePage");
+      goToPage("homePage", true);
     }
   } catch {}
 };
 
-/* Dashboard Slidable Carousel (1 · 2 · 3...) */
+/* Clean Dashboard Slidable Carousel (1 · 2 · 3) */
 function renderCarousel(slides) {
   state.slides = slides || [];
   const track = document.getElementById("dashboardCarousel");
@@ -1599,10 +1897,9 @@ function renderCarousel(slides) {
 
   track.innerHTML = state.slides.map((s, idx) => `
     <div class="carousel-slide" onclick="window.__triggerSlide(${idx})">
-      ${s.image ? `<img class="slide-bg" src="${escapeHtml(s.image)}" alt="">` : ""}
+      <img class="slide-square-img" src="${escapeHtml(s.image || "/logo-circle.png")}" alt="">
       <div class="carousel-slide-content">
-        <span class="slide-tag">${s.is_ad ? "SPONSORED · AD" : `FEATURED #${idx + 1}`}</span>
-        <div style="font-size: 1rem; font-weight: 900;">${escapeHtml(s.title)}</div>
+        <div style="font-size: 0.94rem; font-weight: 800;">${escapeHtml(s.title)}</div>
         <div style="font-size: 0.78rem; color: var(--muted); margin-top: 2px;">${escapeHtml(s.subtitle)}</div>
       </div>
     </div>
@@ -1628,8 +1925,8 @@ window.__triggerSlide = (idx) => {
   const s = state.slides[idx];
   if (!s || !s.query) return;
   document.getElementById("searchInput").value = s.query;
-  goToPage("searchPage");
-  performSearch();
+  goToPage("searchPage", true);
+  performSearch(true);
 };
 
 /* Global Config + Gated Admin Access */
@@ -1700,15 +1997,12 @@ function renderAdminSlidesEditor() {
       <input class="admin-input" placeholder="Subtitle" value="${escapeHtml(s.subtitle)}" onchange="state.slides[${i}].subtitle = this.value">
       <input class="admin-input" placeholder="Image URL (optional)" value="${escapeHtml(s.image)}" onchange="state.slides[${i}].image = this.value">
       <input class="admin-input" placeholder="Search Query on Tap" value="${escapeHtml(s.query)}" onchange="state.slides[${i}].query = this.value">
-      <label style="font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 6px;">
-        <input type="checkbox" ${s.is_ad ? "checked" : ""} onchange="state.slides[${i}].is_ad = this.checked"> Mark as Ad / Promo Card
-      </label>
     </div>
   `).join("");
 }
 
 document.getElementById("addAdminSlideBtn").addEventListener("click", () => {
-  state.slides.push({ title: "New Promo Slide", subtitle: "", image: "", query: "Telugu hit songs", is_ad: true });
+  state.slides.push({ title: "New Slide", subtitle: "", image: "", query: "Telugu hit songs", is_ad: false });
   renderAdminSlidesEditor();
 });
 
@@ -1744,13 +2038,16 @@ document.getElementById("saveAdminConfigBtn").addEventListener("click", async ()
   }
 });
 
-/* Player & Play / Pause Toggle */
+/* Player & Background Playback Support */
 function syncPlayPauseIcons(playing) {
   state.isPlaying = playing;
   const svg = playing ? PAUSE_SVG : PLAY_SVG;
   document.getElementById("playPauseIcon").innerHTML = svg;
   document.getElementById("miniPlayIcon").innerHTML = svg;
   document.getElementById("playingStatus").textContent = playing ? "PLAYING" : "PAUSED";
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  }
 }
 
 window.onYouTubeIframeAPIReady = function () {
@@ -1775,6 +2072,7 @@ window.onYouTubeIframeAPIReady = function () {
       onStateChange: (event) => {
         if (event.data === YT.PlayerState.PLAYING) {
           syncPlayPauseIcons(true);
+          updateMediaSession();
         } else if (event.data === YT.PlayerState.PAUSED) {
           syncPlayPauseIcons(false);
         } else if (event.data === YT.PlayerState.ENDED) {
@@ -1784,6 +2082,20 @@ window.onYouTubeIframeAPIReady = function () {
     },
   });
 };
+
+function updateMediaSession() {
+  const track = state.currentTrack;
+  if (!track || !("mediaSession" in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: decodeHtml(track.title),
+    artist: decodeHtml(track.artist),
+    artwork: track.thumbnail ? [{ src: track.thumbnail, sizes: "480x360", type: "image/jpeg" }] : [],
+  });
+  navigator.mediaSession.setActionHandler("play", () => ytPlayer?.playVideo?.());
+  navigator.mediaSession.setActionHandler("pause", () => ytPlayer?.pauseVideo?.());
+  navigator.mediaSession.setActionHandler("previoustrack", playPrevTrack);
+  navigator.mediaSession.setActionHandler("nexttrack", playNextFromQueue);
+}
 
 function formatTime(sec) {
   const s = Math.max(0, Math.floor(Number(sec) || 0));
@@ -1822,8 +2134,10 @@ function playTrackNow(track, pushPrev = true) {
   if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
     ytPlayer.loadVideoById(track.videoId);
   }
+  updateMediaSession();
   renderQueue();
   updateMiniPlayer();
+  touchSessionActivity();
 }
 
 function playNextFromQueue() {
@@ -1876,7 +2190,6 @@ document.getElementById("closeInlineQueueBtn").addEventListener("click", () => {
   document.getElementById("inlineQueueDrawer").classList.add("hidden");
 });
 
-/* Bottom Mini-Player */
 function updateMiniPlayer() {
   const bar = document.getElementById("miniPlayer");
   const t = state.currentTrack;
@@ -1901,26 +2214,27 @@ document.getElementById("miniLikeBtn").addEventListener("click", () => {
   saveUserLibraryToCloud();
 });
 
-/* Search with Filters & Square Playlist Cards */
+/* Search with Filters + Square Thumbnails for Playlists */
 document.querySelectorAll(".filter-chip").forEach((chip) => {
   chip.addEventListener("click", () => {
     document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
     chip.classList.add("active");
     state.searchFilter = chip.dataset.filter;
-    if (document.getElementById("searchInput").value.trim()) performSearch();
+    if (document.getElementById("searchInput").value.trim()) performSearch(false);
   });
 });
 
-async function performSearch() {
+async function performSearch(saveToHistory = true) {
   const q = document.getElementById("searchInput").value.trim();
   const statusEl = document.getElementById("searchStatus");
   const resultsEl = document.getElementById("searchResults");
   if (!q) return;
 
-  // Track recent query for personalized dashboard playlists
-  state.recentQueries = [q, ...state.recentQueries.filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 6);
-  saveUserLibraryToCloud();
-  loadRecommendedPlaylists();
+  if (saveToHistory) {
+    recordSearchQuery(q);
+    loadRecommendedPlaylists();
+  }
+  document.getElementById("searchHistoryPanel").classList.add("hidden");
 
   statusEl.textContent = "Searching...";
   resultsEl.innerHTML = "";
@@ -1942,10 +2256,10 @@ async function performSearch() {
     const row = document.createElement("div");
     row.className = `song-item ${isPl ? "is-playlist-row" : ""}`;
     row.innerHTML = `
-      <img src="${item.thumbnail || ""}" alt="">
+      <img src="${item.thumbnail || "/logo-circle.png"}" alt="">
       <div class="song-meta">
         <div class="song-title">${escapeHtml(item.title)}</div>
-        <div class="song-channel">${isPl ? "PLAYLIST · " : ""}${escapeHtml(item.artist)}</div>
+        <div class="song-channel">${isPl ? "Playlist · " : ""}${escapeHtml(item.artist)}</div>
       </div>
       <div class="song-actions">
         <button type="button" class="primary p-btn">${isPl ? "Open" : "Play"}</button>
@@ -1971,17 +2285,16 @@ async function performSearch() {
     const handleSelect = async () => {
       if (longPressed) return;
       if (isPl && item.playlistId) {
-        statusEl.textContent = "Loading full playlist...";
+        statusEl.textContent = "Loading playlist...";
         await window.__openSearchedPlaylist(item.playlistId);
         return;
       }
-
       if (state.autoQueueRelated) {
         const remaining = items.slice(index + 1).filter((x) => x.videoId);
         state.queue = [...remaining];
       }
       playTrackNow(item, true);
-      goToPage("homePage");
+      goToPage("homePage", true);
     };
 
     row.addEventListener("click", handleSelect);
@@ -1994,9 +2307,9 @@ async function performSearch() {
   });
 }
 
-document.getElementById("searchButton").addEventListener("click", performSearch);
+document.getElementById("searchButton").addEventListener("click", () => performSearch(true));
 document.getElementById("searchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") performSearch();
+  if (e.key === "Enter") performSearch(true);
 });
 
 /* Action Sheet */
@@ -2152,7 +2465,7 @@ window.__playCollectionItem = (containerId, idx) => {
   if (!arr[idx]) return;
   state.queue = [...arr.slice(idx + 1)];
   playTrackNow(arr[idx], true);
-  goToPage("homePage");
+  goToPage("homePage", true);
 };
 
 window.__removeLiked = (i) => { state.liked.splice(i, 1); saveUserLibraryToCloud(); };
@@ -2200,7 +2513,7 @@ window.__loadPlaylist = (idx) => {
   const [first, ...rest] = pl.tracks;
   state.queue = [...rest];
   playTrackNow(first, true);
-  goToPage("homePage");
+  goToPage("homePage", true);
 };
 
 window.__deletePlaylist = (idx) => {
@@ -2255,6 +2568,7 @@ document.getElementById("clearCacheBtn").addEventListener("click", () => {
 });
 
 loadGlobalAppConfig();
+restoreSessionIfValid();
 loadRecommendedPlaylists();
 renderQueue();
 renderLibraryViews();

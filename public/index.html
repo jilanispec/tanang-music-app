@@ -11,6 +11,33 @@
   <link rel="manifest" href="/manifest.json">
   <title>TANANG MUSIC</title>
   <style>
+    /* Custom Typography from public/assets/ */
+    @font-face {
+      font-family: "GoEagles";
+      src: url("/assets/goeagles.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "NexaHeavy";
+      src: url("/assets/Nexa-Heavy.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "AdjustSmile";
+      src: url("/assets/Adjust-smile.otf") format("opentype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "MaximumImpact";
+      src: url("/assets/Maximum-impact.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "ClarityCity";
+      src: url("/assets/clarity-city.ttf") format("truetype");
+      font-display: swap;
+    }
+
     :root {
       --bg: #090909;
       --surface: #121214;
@@ -20,7 +47,6 @@
       --muted: #a1a1aa;
       --accent: #facc15;
       --accent-soft: rgba(250, 204, 21, 0.14);
-      --danger: #ef4444;
     }
 
     * {
@@ -33,8 +59,12 @@
       padding: 0;
       background: #000000;
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "ClarityCity", system-ui, -apple-system, sans-serif;
       overscroll-behavior-y: contain;
+    }
+
+    button, input, textarea {
+      font-family: "ClarityCity", system-ui, -apple-system, sans-serif;
     }
 
     .mobile-shell {
@@ -94,8 +124,8 @@
       text-align: center;
     }
     .auth-brand-title {
-      font-size: 1.15rem;
-      font-weight: 900;
+      font-family: "GoEagles", sans-serif;
+      font-size: 1.25rem;
       letter-spacing: 0.08em;
       margin: 0 0 4px;
     }
@@ -153,7 +183,6 @@
       font-weight: 900;
       font-size: 0.95rem;
       cursor: pointer;
-      margin-top: 2px;
     }
 
     .auth-status {
@@ -163,16 +192,21 @@
       min-height: 1.2em;
     }
 
-    /* Stable Pinned Top Header */
+    /* Fixed Non-Scrolling Top Bar (GoEagles Font) */
     .topbar {
-      position: sticky;
+      position: fixed;
       top: 0;
-      z-index: 40;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 460px;
+      height: 58px;
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 11px 16px;
-      background: rgba(9, 9, 9, 0.96);
+      padding: 0 16px;
+      background: rgba(9, 9, 9, 0.97);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
@@ -183,16 +217,16 @@
       gap: 10px;
       color: var(--text);
       text-decoration: none;
-      font-weight: 900;
+      font-family: "GoEagles", sans-serif;
       letter-spacing: 0.06em;
-      font-size: 0.98rem;
+      font-size: 1.08rem;
     }
-    .brand b { color: var(--accent); font-weight: 900; }
+    .brand b { color: var(--accent); font-weight: normal; }
 
     .room-badge {
       font-size: 0.68rem;
       font-weight: 800;
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
       background: var(--accent-soft);
       color: var(--accent);
@@ -200,39 +234,85 @@
       letter-spacing: 0.06em;
     }
 
-    .app-main { padding: 14px 14px 154px; }
+    /* Offset main content for fixed top header & fixed bottom nav */
+    .app-main { padding: 72px 14px 156px; }
 
     .page { display: none; }
     .page.active { display: block; }
 
-    .eyebrow {
-      margin: 0 0 3px;
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
+    /* Greetings (Nexa-Heavy) & User Name (Adjust-smile) */
+    .greeting-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 4px;
+      font-family: "NexaHeavy", sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
       color: var(--accent);
-      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .greeting-icon {
+      width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      overflow: visible;
+    }
+    .greeting-icon svg {
+      width: 16px;
+      height: 16px;
+      overflow: visible;
+    }
+
+    .user-name-title {
+      margin: 0 0 4px;
+      font-family: "AdjustSmile", cursive, sans-serif;
+      font-size: 1.85rem;
+      font-weight: normal;
+      line-height: 1.15;
+    }
+    .user-name-title span { color: var(--accent); }
+
+    /* Side / Section Headings (Maximum-impact) */
+    .side-heading {
+      font-family: "MaximumImpact", sans-serif;
+      letter-spacing: 0.07em;
+      font-weight: normal;
       text-transform: uppercase;
     }
 
-    h1 { margin: 0 0 4px; font-size: 1.5rem; }
-    h1 span { color: var(--accent); }
-    .welcome p.sub-greeting { margin: 0; color: var(--muted); font-size: 0.86rem; }
+    .page-title-heading {
+      margin: 0 0 6px;
+      font-family: "MaximumImpact", sans-serif;
+      font-size: 1.55rem;
+      letter-spacing: 0.05em;
+      font-weight: normal;
+    }
+    .page-title-heading span { color: var(--accent); }
+
+    .welcome p.sub-greeting { margin: 0; color: var(--muted); font-size: 0.85rem; }
 
     .section-heading, .results-heading {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 14px 0 9px;
+      margin: 15px 0 9px;
     }
     .section-heading h2, .results-heading h2 {
       margin: 0;
-      font-size: 0.74rem;
+      font-family: "MaximumImpact", sans-serif;
+      font-size: 0.88rem;
       letter-spacing: 0.08em;
+      font-weight: normal;
       color: var(--muted);
     }
     .playing-status { font-size: 0.74rem; font-weight: 800; color: var(--accent); }
 
-    /* Player Card */
+    /* Player Card (Clean Video Crop — No YouTube Overlays) */
     .player-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -249,15 +329,22 @@
       background: #050506;
       border: 1px solid var(--border);
     }
-    .video-frame iframe,
-    .video-frame #youtubePlayer {
+    /* Scale slightly and disable iframe pointer overlays so YouTube UI watermarks/instructions never show */
+    .video-crop-wrap {
+      position: absolute;
+      inset: -14%;
+      width: 128%;
+      height: 128%;
+      pointer-events: none;
+    }
+    .video-crop-wrap iframe,
+    .video-crop-wrap #youtubePlayer {
       width: 100%;
       height: 100%;
       display: block;
-      transform-origin: center center;
-      transition: transform 0.2s ease;
+      border: 0;
     }
-    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 4; }
+    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 3.6; }
 
     .video-placeholder {
       position: absolute;
@@ -269,6 +356,7 @@
       gap: 6px;
       color: var(--muted);
       background: #0b0b0d;
+      z-index: 2;
       pointer-events: none;
     }
     .video-placeholder.hidden { display: none; }
@@ -376,7 +464,7 @@
       cursor: pointer;
     }
 
-    /* Collapsible & Scrollable In-Player Queue Drawer */
+    /* Inline Queue Drawer */
     .inline-queue-drawer {
       margin-top: 10px;
       background: var(--bg);
@@ -399,10 +487,140 @@
       overflow-y: auto;
       display: grid;
       gap: 7px;
-      padding-right: 2px;
     }
 
-    /* Filter Chips in Search */
+    /* Slidable Dashboard Carousel (1 · 2 · 3...) */
+    .carousel-wrap {
+      margin-top: 14px;
+    }
+    .carousel-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      gap: 10px;
+      scrollbar-width: none;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, #17171c 0%, #0e0e11 100%);
+      overflow: hidden;
+      position: relative;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .carousel-slide img.slide-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.48;
+      pointer-events: none;
+    }
+    .carousel-slide-content {
+      position: relative;
+      z-index: 2;
+    }
+    .slide-tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #090909;
+      margin-bottom: 5px;
+    }
+    .carousel-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .carousel-dot {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .carousel-dot.active {
+      background: var(--accent);
+      color: #090909;
+      border-color: var(--accent);
+    }
+
+    /* Square Playlist Cards Grid (Algorithmic Recommendations) */
+    .playlist-square-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .square-pl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 9px;
+      cursor: pointer;
+    }
+    .square-pl-card:active { background: var(--surface-2); }
+    .square-thumb-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #1a1a1f;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .square-thumb-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .square-pl-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(9, 9, 9, 0.88);
+      color: var(--accent);
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    .square-pl-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .square-pl-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Search & Filter Chips */
     .filter-row {
       display: flex;
       gap: 7px;
@@ -428,7 +646,6 @@
       border-color: var(--accent);
     }
 
-    /* Search & Inputs */
     .search-box, .create-playlist-box {
       display: flex;
       align-items: center;
@@ -478,12 +695,12 @@
       border: none;
     }
 
-    /* Song Row */
+    /* Song Row & Square Thumbnail Variant for Playlists in Search */
     .song-list { display: grid; gap: 9px; }
     .song-item {
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       padding: 9px;
       border-radius: 12px;
       background: var(--surface);
@@ -500,6 +717,13 @@
       object-fit: cover;
       border-radius: 7px;
       flex-shrink: 0;
+    }
+    /* Square Thumbnail Box so User Identifies Playlists Immediately */
+    .song-item.is-playlist-row img {
+      width: 52px;
+      height: 52px;
+      border-radius: 9px;
+      border: 1.5px solid var(--accent);
     }
     .song-meta { flex: 1 1 auto; min-width: 0; overflow: hidden; }
     .song-title {
@@ -535,7 +759,7 @@
       border: none;
     }
 
-    /* Library Quick Tabs (Playlists / Liked / Favorites) */
+    /* Library Quick Tabs */
     .lib-tabs {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -558,15 +782,16 @@
       border-color: var(--accent);
     }
 
-    .import-card {
+    .import-card, .updates-footer-card, .settings-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 14px;
     }
-    .import-card h3 { margin: 0 0 6px; font-size: 0.84rem; color: var(--accent); }
-    .import-card input {
+    .import-card { margin-top: 0; margin-bottom: 12px; }
+    .import-card h3 { margin: 0 0 6px; font-size: 0.82rem; color: var(--accent); }
+    .import-card input, .admin-input {
       width: 100%;
       background: var(--bg);
       color: var(--text);
@@ -578,14 +803,6 @@
       outline: none;
     }
 
-    /* Updates & Admin Panel Cards */
-    .updates-footer-card, .settings-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 15px;
-      margin-top: 14px;
-    }
     .updates-badge {
       display: inline-block;
       font-size: 0.68rem;
@@ -596,6 +813,13 @@
       color: #090909;
       margin-bottom: 6px;
     }
+    .update-timestamp {
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin: 4px 0 6px;
+      font-weight: 700;
+    }
+
     .settings-row {
       display: flex;
       align-items: center;
@@ -605,25 +829,13 @@
       font-size: 0.85rem;
     }
 
-    .admin-panel input, .admin-panel textarea {
-      width: 100%;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.86rem;
-      margin-bottom: 8px;
-      font-family: inherit;
-    }
-
-    /* Bottom Action Sheet (Long Press / 3 Dots) */
+    /* Bottom Action Sheet */
     .sheet-backdrop {
       position: fixed;
       inset: 0;
       max-width: 460px;
       margin: 0 auto;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.78);
       z-index: 110;
       display: flex;
       align-items: flex-end;
@@ -650,12 +862,12 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 13px 10px;
+      padding: 12px 10px;
       border: none;
       border-radius: 12px;
       background: transparent;
       color: var(--text);
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 700;
       text-align: left;
       cursor: pointer;
@@ -780,21 +992,26 @@
     </div>
   </div>
 
-  <!-- Stable Pinned Top Header -->
+  <!-- Fixed Non-Scrolling Top Bar (GoEagles Font) -->
   <header class="topbar">
     <a class="brand" href="#" data-go="homePage">
       <img src="/logo-circle.png" alt="" class="logo-circle sm" onerror="this.style.display='none'">
       <span>TANANG <b>MUSIC</b></span>
     </a>
-    <div class="room-badge" id="versionBadge">v2.0</div>
+    <div class="room-badge" id="versionBadge">v2.2</div>
   </header>
 
   <main class="app-main">
     <!-- HOME / DASHBOARD PAGE -->
     <section class="page active" id="homePage">
       <div class="welcome">
-        <p class="eyebrow" id="greetingEyebrow">GOOD DAY</p>
-        <h1 id="greetingHeadline">Welcome, <span>Listener.</span></h1>
+        <!-- Greeting with Nexa-Heavy + Perfectly Aligned Inline SVG Icon -->
+        <div class="greeting-row">
+          <span class="greeting-icon" id="greetingIcon"></span>
+          <span id="greetingText">GOOD DAY</span>
+        </div>
+        <!-- User Name with Adjust-smile Font -->
+        <h1 class="user-name-title" id="greetingHeadline">Hello, <span>Listener.</span></h1>
         <p class="sub-greeting">Your music, your vibe.</p>
       </div>
 
@@ -805,7 +1022,9 @@
 
       <div class="player-card">
         <div class="video-frame" id="videoFrame">
-          <div id="youtubePlayer"></div>
+          <div class="video-crop-wrap">
+            <div id="youtubePlayer"></div>
+          </div>
           <div class="video-placeholder" id="videoPlaceholder">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             <span>Search a movie, hero, or song</span>
@@ -859,7 +1078,7 @@
           </button>
         </div>
 
-        <!-- Scrollable & Closable Queue Inside Player Section -->
+        <!-- Scrollable & Closable Queue Drawer -->
         <div class="inline-queue-drawer hidden" id="inlineQueueDrawer">
           <div class="inline-queue-header">
             <span>UP NEXT (SCROLLABLE)</span>
@@ -869,21 +1088,35 @@
         </div>
       </div>
 
-      <!-- Updates Section at Bottom of Dashboard -->
+      <!-- Slidable Dashboard Carousel (1 · 2 · 3...) with Images & Ads -->
+      <div class="carousel-wrap">
+        <div class="carousel-track" id="dashboardCarousel"></div>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+
+      <!-- Algorithmic Recommended Playlists (Square Boxes) -->
+      <div class="section-heading">
+        <h2>FOR YOU · PLAYLISTS</h2>
+        <span class="status-text" style="font-size: 0.72rem;">BASED ON SEARCHES</span>
+      </div>
+      <div class="playlist-square-grid" id="recommendedPlaylistsGrid"></div>
+
+      <!-- Updates Section at Bottom of Dashboard with Published Date & Time -->
       <div class="updates-footer-card" id="updatesCard">
-        <span class="updates-badge" id="updateVersionTag">NEW UPDATE</span>
-        <h3 style="margin: 2px 0 4px; font-size: 0.96rem;" id="updateTitle">TANANG MUSIC 2.0</h3>
+        <span class="updates-badge" id="updateVersionTag">UPDATE v2.2</span>
+        <div class="update-timestamp" id="updatePublishedAt">Published: Nov 25, 2026</div>
+        <h3 style="margin: 2px 0 4px; font-size: 0.96rem;" id="updateTitle">Welcome to TANANG MUSIC</h3>
         <p style="margin: 0; font-size: 0.82rem; color: var(--muted);" id="updateBody">
-          Filter searches by Movie, Hero, Album, or Playlist, and import playlists from YouTube & Spotify.
+          Explore personalized playlists, movie hits, and Spotify/YouTube playlist imports.
         </p>
       </div>
     </section>
 
-    <!-- SEARCH PAGE WITH MOVIE / HERO / ALBUM / PLAYLIST FILTERS -->
+    <!-- SEARCH PAGE -->
     <section class="page" id="searchPage">
       <div class="page-heading">
         <p class="eyebrow">DISCOVER</p>
-        <h1>Search <span>music.</span></h1>
+        <h1 class="page-title-heading">SEARCH <span>MUSIC.</span></h1>
       </div>
 
       <div class="search-box">
@@ -915,7 +1148,7 @@
     <section class="page" id="queuePage">
       <div class="page-heading">
         <p class="eyebrow">UP NEXT</p>
-        <h1>Your <span>queue.</span></h1>
+        <h1 class="page-title-heading">YOUR <span>QUEUE.</span></h1>
       </div>
 
       <div class="results-heading">
@@ -926,11 +1159,11 @@
       <div id="queueList" class="song-list"></div>
     </section>
 
-    <!-- LIBRARY & PLAYLISTS PAGE (Playlists + Liked + Favorites + YouTube/Spotify Import) -->
+    <!-- LIBRARY & PLAYLISTS PAGE -->
     <section class="page" id="playlistsPage">
       <div class="page-heading">
         <p class="eyebrow">YOUR LIBRARY</p>
-        <h1>Saved <span>music.</span></h1>
+        <h1 class="page-title-heading">SAVED <span>MUSIC.</span></h1>
       </div>
 
       <div class="lib-tabs">
@@ -939,7 +1172,6 @@
         <button type="button" class="lib-tab" data-libtab="favorites">Favorites (<span id="favCount">0</span>)</button>
       </div>
 
-      <!-- Playlists Sub-View -->
       <div id="libPlaylistsView">
         <div class="import-card">
           <h3>IMPORT FROM YOUTUBE OR SPOTIFY</h3>
@@ -961,27 +1193,25 @@
         <div id="playlistList" class="song-list"></div>
       </div>
 
-      <!-- Liked Songs Sub-View -->
       <div id="libLikedView" style="display: none;">
         <div id="likedList" class="song-list"></div>
       </div>
 
-      <!-- Favorite Songs Sub-View -->
       <div id="libFavoritesView" style="display: none;">
         <div id="favoritesList" class="song-list"></div>
       </div>
     </section>
 
-    <!-- SETTINGS & ADMIN PANEL PAGE -->
+    <!-- SETTINGS & LOCKED ADMIN ACCESS -->
     <section class="page" id="settingsPage">
       <div class="page-heading">
         <p class="eyebrow">CUSTOMISE</p>
-        <h1>Settings<span>.</span></h1>
+        <h1 class="page-title-heading">SETTINGS<span>.</span></h1>
       </div>
 
-      <div class="settings-card">
-        <h2>APP PREFERENCES</h2>
-        <p>Tailor playback and storage on your device.</p>
+      <div class="settings-card" style="margin-top: 0;">
+        <h2 class="side-heading" style="margin: 0 0 4px;">APP PREFERENCES</h2>
+        <p class="status-text" style="margin: 0 0 10px;">Tailor playback and storage on your device.</p>
 
         <div class="settings-row">
           <span>Logged in as</span>
@@ -1003,18 +1233,41 @@
           <span>Account Session</span>
           <button type="button" class="text-button" id="logoutBtn">LOGOUT</button>
         </div>
+        <div class="settings-row">
+          <span>System</span>
+          <button type="button" class="text-button" id="openAdminGateBtn" style="font-size: 0.68rem; opacity: 0.8;">Admin Access</button>
+        </div>
       </div>
 
-      <!-- Admin Panel (Changes Live App Info for All Users) -->
-      <div class="settings-card admin-panel">
-        <span class="updates-badge">ADMIN EDITOR</span>
-        <h2>App Updates & Global Editor</h2>
-        <p>Publish announcements and featured updates to all users.</p>
+      <!-- Step 1: Enter Admin Key Box (Hidden until Admin Access button is tapped) -->
+      <div class="settings-card" id="adminKeyGateCard" style="display: none;">
+        <span class="updates-badge">ADMIN SIGN IN</span>
+        <p class="status-text" style="margin: 4px 0 10px;">Enter your Admin Key to unlock the global editor.</p>
+        <input id="adminSecretInput" class="admin-input" type="password" placeholder="Enter Admin Secret Key">
+        <button type="button" class="text-button accent" id="verifyAdminKeyBtn" style="width: 100%; padding: 11px;">
+          UNLOCK ADMIN PANEL
+        </button>
+        <p class="status-text" id="adminGateStatus" style="margin: 8px 0 0;"></p>
+      </div>
 
-        <input id="adminSecretInput" type="password" placeholder="Enter Admin Secret Key">
-        <input id="adminVersionInput" type="text" placeholder="App Version (e.g. v2.1)">
-        <input id="adminTitleInput" type="text" placeholder="Update Headline">
-        <textarea id="adminBodyInput" rows="2" placeholder="Update message shown to all users..."></textarea>
+      <!-- Step 2: Full Admin Controls (Shown ONLY after key verification) -->
+      <div class="settings-card" id="adminControlsCard" style="display: none;">
+        <span class="updates-badge">ADMIN EDITOR</span>
+        <h2 class="side-heading" style="margin: 4px 0;">PUBLISH UPDATES, SLIDES & ADS</h2>
+        <p class="status-text" style="margin: 0 0 10px;">Changes publish live to all users with timestamp.</p>
+
+        <input id="adminVersionInput" class="admin-input" type="text" placeholder="App Version (e.g. v2.3)">
+        <input id="adminTitleInput" class="admin-input" type="text" placeholder="Update Headline">
+        <textarea id="adminBodyInput" class="admin-input" rows="2" placeholder="Update message shown to all users..."></textarea>
+
+        <div style="margin: 8px 0 6px; font-size: 0.74rem; font-weight: 800; color: var(--accent);">
+          DASHBOARD SLIDES & ADS (1 · 2 · 3)
+        </div>
+        <div id="adminSlidesEditor"></div>
+        <button type="button" class="text-button" id="addAdminSlideBtn" style="width: 100%; margin-bottom: 10px;">
+          + ADD SLIDE / AD CARD
+        </button>
+
         <button type="button" class="text-button accent" id="saveAdminConfigBtn" style="width: 100%; padding: 11px;">
           PUBLISH TO ALL USERS
         </button>
@@ -1041,7 +1294,7 @@
     </button>
   </div>
 
-  <!-- Bottom Action Sheet (Long Press on Search / 3 Dots on Player) -->
+  <!-- Bottom Action Sheet -->
   <div class="sheet-backdrop hidden" id="actionSheetBackdrop">
     <div class="action-sheet">
       <div class="sheet-track-header">
@@ -1103,6 +1356,10 @@
 const PLAY_SVG = `<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>`;
 const PAUSE_SVG = `<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>`;
 
+const MORNING_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2v3M4.9 4.9l2.1 2.1M2 12h3M19 12h3M17 7l2.1-2.1M5 17h14M8 17a4 4 0 0 1 8 0"/></svg>`;
+const AFTERNOON_SVG = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+const EVENING_SVG = `<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`;
+
 const state = {
   user: null,
   displayName: "Listener",
@@ -1115,8 +1372,10 @@ const state = {
   liked: [],
   favorites: [],
   playlists: [],
+  recentQueries: [],
+  slides: [],
+  verifiedAdminKey: "",
   searchFilter: "all",
-  lastSearchResults: [],
   sheetTrack: null,
   shuffle: false,
   audioMode: false,
@@ -1145,9 +1404,16 @@ function escapeHtml(str) {
 function updateGreeting(name) {
   const hour = new Date().getHours();
   let greet = "GOOD EVENING";
-  if (hour < 12) greet = "GOOD MORNING";
-  else if (hour < 17) greet = "GOOD AFTERNOON";
-  document.getElementById("greetingEyebrow").textContent = greet;
+  let icon = EVENING_SVG;
+  if (hour < 12) {
+    greet = "GOOD MORNING";
+    icon = MORNING_SVG;
+  } else if (hour < 17) {
+    greet = "GOOD AFTERNOON";
+    icon = AFTERNOON_SVG;
+  }
+  document.getElementById("greetingIcon").innerHTML = icon;
+  document.getElementById("greetingText").textContent = greet;
   document.getElementById("greetingHeadline").innerHTML = `Hello, <span>${escapeHtml(name)}.</span>`;
 }
 
@@ -1169,7 +1435,7 @@ document.querySelectorAll("[data-go]").forEach((el) => {
   });
 });
 
-/* Auth Mode Switch (Login vs Attractive Register with Full Name) */
+/* Auth Mode Switch */
 function setAuthMode(mode) {
   state.authMode = mode;
   document.getElementById("tabLogin").classList.toggle("active", mode === "login");
@@ -1229,6 +1495,7 @@ async function submitAuth() {
     updateGreeting(state.displayName);
     document.getElementById("authGate").classList.add("hidden");
     await syncUserLibraryFromCloud();
+    await loadRecommendedPlaylists();
   } catch {
     statusEl.textContent = "Connection error. Try again.";
   } finally {
@@ -1243,7 +1510,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   document.getElementById("authGate").classList.remove("hidden");
 });
 
-/* Cloud Library & Global Config Sync */
+/* Cloud Library & Algorithmic Search History */
 async function syncUserLibraryFromCloud() {
   if (!state.user) return;
   try {
@@ -1253,6 +1520,7 @@ async function syncUserLibraryFromCloud() {
       state.liked = lib.liked || [];
       state.favorites = lib.favorites || [];
       state.playlists = lib.playlists || [];
+      state.recentQueries = lib.recent_queries || [];
     }
   } catch {}
   renderLibraryViews();
@@ -1272,11 +1540,99 @@ async function saveUserLibraryToCloud() {
         liked: state.liked,
         favorites: state.favorites,
         playlists: state.playlists,
+        recent_queries: state.recentQueries,
       }),
     });
   } catch {}
 }
 
+async function loadRecommendedPlaylists() {
+  const seed = state.recentQueries[0] || "Telugu hit songs";
+  const grid = document.getElementById("recommendedPlaylistsGrid");
+  try {
+    const res = await fetch(`/api/recommendations?q=${encodeURIComponent(seed)}`);
+    const data = await res.json();
+    const lists = data.playlists || [];
+    if (!lists.length) {
+      grid.innerHTML = `<p class="status-text">Search songs to personalize playlists.</p>`;
+      return;
+    }
+    grid.innerHTML = lists.map((pl) => `
+      <div class="square-pl-card" onclick="window.__openSearchedPlaylist('${pl.playlistId}')">
+        <div class="square-thumb-box">
+          <img src="${pl.thumbnail || ""}" alt="">
+          <span class="square-pl-badge">PLAYLIST</span>
+        </div>
+        <div class="square-pl-title">${escapeHtml(pl.title)}</div>
+        <div class="square-pl-sub">${escapeHtml(pl.artist)}</div>
+      </div>
+    `).join("");
+  } catch {}
+}
+
+window.__openSearchedPlaylist = async (playlistId) => {
+  if (!playlistId) return;
+  document.getElementById("playingStatus").textContent = "LOADING...";
+  try {
+    const res = await fetch(`/api/playlist_tracks?id=${encodeURIComponent(playlistId)}`);
+    const data = await res.json();
+    const tracks = data.tracks || [];
+    if (tracks.length) {
+      const [first, ...rest] = tracks;
+      state.queue = [...rest];
+      playTrackNow(first, true);
+      goToPage("homePage");
+    }
+  } catch {}
+};
+
+/* Dashboard Slidable Carousel (1 · 2 · 3...) */
+function renderCarousel(slides) {
+  state.slides = slides || [];
+  const track = document.getElementById("dashboardCarousel");
+  const dots = document.getElementById("carouselDots");
+  if (!state.slides.length) {
+    track.innerHTML = "";
+    dots.innerHTML = "";
+    return;
+  }
+
+  track.innerHTML = state.slides.map((s, idx) => `
+    <div class="carousel-slide" onclick="window.__triggerSlide(${idx})">
+      ${s.image ? `<img class="slide-bg" src="${escapeHtml(s.image)}" alt="">` : ""}
+      <div class="carousel-slide-content">
+        <span class="slide-tag">${s.is_ad ? "SPONSORED · AD" : `FEATURED #${idx + 1}`}</span>
+        <div style="font-size: 1rem; font-weight: 900;">${escapeHtml(s.title)}</div>
+        <div style="font-size: 0.78rem; color: var(--muted); margin-top: 2px;">${escapeHtml(s.subtitle)}</div>
+      </div>
+    </div>
+  `).join("");
+
+  dots.innerHTML = state.slides.map((_, idx) => `
+    <button type="button" class="carousel-dot ${idx === 0 ? "active" : ""}" onclick="window.__scrollToSlide(${idx})">${idx + 1}</button>
+  `).join("");
+
+  track.onscroll = () => {
+    const w = track.clientWidth || 1;
+    const activeIdx = Math.round(track.scrollLeft / w);
+    dots.querySelectorAll(".carousel-dot").forEach((d, i) => d.classList.toggle("active", i === activeIdx));
+  };
+}
+
+window.__scrollToSlide = (idx) => {
+  const track = document.getElementById("dashboardCarousel");
+  track.scrollTo({ left: idx * track.clientWidth, behavior: "smooth" });
+};
+
+window.__triggerSlide = (idx) => {
+  const s = state.slides[idx];
+  if (!s || !s.query) return;
+  document.getElementById("searchInput").value = s.query;
+  goToPage("searchPage");
+  performSearch();
+};
+
+/* Global Config + Gated Admin Access */
 async function loadGlobalAppConfig() {
   try {
     const res = await fetch("/api/app_config");
@@ -1287,6 +1643,9 @@ async function loadGlobalAppConfig() {
       document.getElementById("updateVersionTag").textContent = `UPDATE ${cfg.version}`;
       document.getElementById("adminVersionInput").value = cfg.version;
     }
+    if (cfg.published_at) {
+      document.getElementById("updatePublishedAt").textContent = `Published: ${cfg.published_at}`;
+    }
     if (cfg.announcement_title) {
       document.getElementById("updateTitle").textContent = cfg.announcement_title;
       document.getElementById("adminTitleInput").value = cfg.announcement_title;
@@ -1295,8 +1654,68 @@ async function loadGlobalAppConfig() {
       document.getElementById("updateBody").textContent = cfg.announcement_body;
       document.getElementById("adminBodyInput").value = cfg.announcement_body;
     }
+    renderCarousel(cfg.slides || []);
   } catch {}
 }
+
+document.getElementById("openAdminGateBtn").addEventListener("click", () => {
+  const gate = document.getElementById("adminKeyGateCard");
+  gate.style.display = gate.style.display === "none" ? "block" : "none";
+});
+
+document.getElementById("verifyAdminKeyBtn").addEventListener("click", async () => {
+  const key = document.getElementById("adminSecretInput").value.trim();
+  const statusEl = document.getElementById("adminGateStatus");
+  if (!key) return;
+  statusEl.textContent = "Verifying...";
+  try {
+    const res = await fetch("/api/admin_verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ admin_key: key }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.authorized) {
+      statusEl.textContent = data.error || "Invalid Admin Key.";
+      return;
+    }
+    state.verifiedAdminKey = key;
+    document.getElementById("adminKeyGateCard").style.display = "none";
+    document.getElementById("adminControlsCard").style.display = "block";
+    renderAdminSlidesEditor();
+  } catch {
+    statusEl.textContent = "Verification error.";
+  }
+});
+
+function renderAdminSlidesEditor() {
+  const wrap = document.getElementById("adminSlidesEditor");
+  wrap.innerHTML = state.slides.map((s, i) => `
+    <div style="border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: var(--bg);">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.74rem; color: var(--accent);">
+        <span>SLIDE #${i + 1}</span>
+        <button type="button" class="text-button" style="padding: 2px 7px;" onclick="window.__removeAdminSlide(${i})">✕</button>
+      </div>
+      <input class="admin-input" placeholder="Slide Title" value="${escapeHtml(s.title)}" onchange="state.slides[${i}].title = this.value">
+      <input class="admin-input" placeholder="Subtitle" value="${escapeHtml(s.subtitle)}" onchange="state.slides[${i}].subtitle = this.value">
+      <input class="admin-input" placeholder="Image URL (optional)" value="${escapeHtml(s.image)}" onchange="state.slides[${i}].image = this.value">
+      <input class="admin-input" placeholder="Search Query on Tap" value="${escapeHtml(s.query)}" onchange="state.slides[${i}].query = this.value">
+      <label style="font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+        <input type="checkbox" ${s.is_ad ? "checked" : ""} onchange="state.slides[${i}].is_ad = this.checked"> Mark as Ad / Promo Card
+      </label>
+    </div>
+  `).join("");
+}
+
+document.getElementById("addAdminSlideBtn").addEventListener("click", () => {
+  state.slides.push({ title: "New Promo Slide", subtitle: "", image: "", query: "Telugu hit songs", is_ad: true });
+  renderAdminSlidesEditor();
+});
+
+window.__removeAdminSlide = (i) => {
+  state.slides.splice(i, 1);
+  renderAdminSlidesEditor();
+};
 
 document.getElementById("saveAdminConfigBtn").addEventListener("click", async () => {
   const statusEl = document.getElementById("adminStatus");
@@ -1306,25 +1725,26 @@ document.getElementById("saveAdminConfigBtn").addEventListener("click", async ()
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        admin_key: document.getElementById("adminSecretInput").value,
+        admin_key: state.verifiedAdminKey,
         version: document.getElementById("adminVersionInput").value,
         announcement_title: document.getElementById("adminTitleInput").value,
         announcement_body: document.getElementById("adminBodyInput").value,
+        slides: state.slides,
       }),
     });
     const data = await res.json();
     if (!res.ok) {
-      statusEl.textContent = data.error || "Unauthorized";
+      statusEl.textContent = data.error || "Publish failed";
       return;
     }
-    statusEl.textContent = "Published live to all users!";
+    statusEl.textContent = "Published live with current date & time!";
     loadGlobalAppConfig();
   } catch {
     statusEl.textContent = "Failed to publish.";
   }
 });
 
-/* Player & Explicit Play / Pause Icons */
+/* Player & Play / Pause Toggle */
 function syncPlayPauseIcons(playing) {
   state.isPlaying = playing;
   const svg = playing ? PAUSE_SVG : PLAY_SVG;
@@ -1337,7 +1757,16 @@ window.onYouTubeIframeAPIReady = function () {
   ytPlayer = new YT.Player("youtubePlayer", {
     width: "100%",
     height: "100%",
-    playerVars: { autoplay: 1, controls: 0, playsinline: 1, rel: 0 },
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      iv_load_policy: 3,
+      modestbranding: 1,
+      playsinline: 1,
+      rel: 0,
+    },
     events: {
       onReady: () => {
         state.playerReady = true;
@@ -1440,7 +1869,6 @@ window.togglePlaybackMode = function () {
   document.getElementById("prefAudioMode").checked = state.audioMode;
 };
 
-/* Inline Scrollable & Closable Queue Drawer Inside Player */
 document.getElementById("toggleInlineQueueBtn").addEventListener("click", () => {
   document.getElementById("inlineQueueDrawer").classList.toggle("hidden");
 });
@@ -1448,7 +1876,7 @@ document.getElementById("closeInlineQueueBtn").addEventListener("click", () => {
   document.getElementById("inlineQueueDrawer").classList.add("hidden");
 });
 
-/* Persistent Bottom Mini-Player */
+/* Bottom Mini-Player */
 function updateMiniPlayer() {
   const bar = document.getElementById("miniPlayer");
   const t = state.currentTrack;
@@ -1473,7 +1901,7 @@ document.getElementById("miniLikeBtn").addEventListener("click", () => {
   saveUserLibraryToCloud();
 });
 
-/* Search with Movie / Hero / Album / Playlist Filters + Auto-Load All Tracks */
+/* Search with Filters & Square Playlist Cards */
 document.querySelectorAll(".filter-chip").forEach((chip) => {
   chip.addEventListener("click", () => {
     document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
@@ -1489,6 +1917,11 @@ async function performSearch() {
   const resultsEl = document.getElementById("searchResults");
   if (!q) return;
 
+  // Track recent query for personalized dashboard playlists
+  state.recentQueries = [q, ...state.recentQueries.filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+  saveUserLibraryToCloud();
+  loadRecommendedPlaylists();
+
   statusEl.textContent = "Searching...";
   resultsEl.innerHTML = "";
 
@@ -1501,59 +1934,48 @@ async function performSearch() {
   }
 
   const items = data.tracks || [];
-  state.lastSearchResults = items;
   document.getElementById("resultCount").textContent = `${items.length} FOUND`;
-  statusEl.textContent = items.length ? "Tap to play all · Hold for options." : "No results found.";
+  statusEl.textContent = items.length ? "Tap to play all · Hold song for options." : "No results found.";
 
   items.forEach((item, index) => {
+    const isPl = item.kind === "playlist";
     const row = document.createElement("div");
-    row.className = "song-item";
-    const badge = item.kind === "playlist" ? "PLAYLIST · " : "";
+    row.className = `song-item ${isPl ? "is-playlist-row" : ""}`;
     row.innerHTML = `
       <img src="${item.thumbnail || ""}" alt="">
       <div class="song-meta">
         <div class="song-title">${escapeHtml(item.title)}</div>
-        <div class="song-channel">${badge}${escapeHtml(item.artist)}</div>
+        <div class="song-channel">${isPl ? "PLAYLIST · " : ""}${escapeHtml(item.artist)}</div>
       </div>
       <div class="song-actions">
-        <button type="button" class="primary p-btn">Play</button>
+        <button type="button" class="primary p-btn">${isPl ? "Open" : "Play"}</button>
       </div>
     `;
 
-    // Long-press detection (500ms) for Add to Queue / Favorites / Liked / Playlist
     let pressTimer = null;
     let longPressed = false;
     row.addEventListener("touchstart", () => {
       longPressed = false;
       pressTimer = setTimeout(() => {
         longPressed = true;
-        if (item.kind !== "playlist") openActionSheet(item);
+        if (!isPl) openActionSheet(item);
       }, 500);
     }, { passive: true });
     row.addEventListener("touchend", () => clearTimeout(pressTimer));
     row.addEventListener("touchmove", () => clearTimeout(pressTimer));
     row.addEventListener("contextmenu", (e) => {
       e.preventDefault();
-      if (item.kind !== "playlist") openActionSheet(item);
+      if (!isPl) openActionSheet(item);
     });
 
     const handleSelect = async () => {
       if (longPressed) return;
-      if (item.kind === "playlist" && item.playlistId) {
+      if (isPl && item.playlistId) {
         statusEl.textContent = "Loading full playlist...";
-        const plRes = await fetch(`/api/playlist_tracks?id=${encodeURIComponent(item.playlistId)}`);
-        const plData = await plRes.json();
-        const plTracks = plData.tracks || [];
-        if (plTracks.length) {
-          const [first, ...rest] = plTracks;
-          state.queue = [...rest];
-          playTrackNow(first, true);
-          goToPage("homePage");
-        }
+        await window.__openSearchedPlaylist(item.playlistId);
         return;
       }
 
-      // Play tapped track AND automatically load remaining tracks into queue
       if (state.autoQueueRelated) {
         const remaining = items.slice(index + 1).filter((x) => x.videoId);
         state.queue = [...remaining];
@@ -1577,7 +1999,7 @@ document.getElementById("searchInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") performSearch();
 });
 
-/* Action Sheet (Long Press on Search / 3 Dots on Player) */
+/* Action Sheet */
 function openActionSheet(track) {
   if (!track || !track.videoId) return;
   state.sheetTrack = track;
@@ -1595,7 +2017,6 @@ function openActionSheet(track) {
       </button>
     `).join("");
   }
-
   document.getElementById("actionSheetBackdrop").classList.remove("hidden");
 }
 
@@ -1618,7 +2039,6 @@ document.getElementById("sheetAddQueue").addEventListener("click", () => {
   }
   closeActionSheet();
 });
-
 document.getElementById("sheetAddFavorite").addEventListener("click", () => {
   const t = state.sheetTrack;
   if (t && !state.favorites.some((x) => x.videoId === t.videoId)) {
@@ -1627,7 +2047,6 @@ document.getElementById("sheetAddFavorite").addEventListener("click", () => {
   }
   closeActionSheet();
 });
-
 document.getElementById("sheetAddLiked").addEventListener("click", () => {
   const t = state.sheetTrack;
   if (t && !state.liked.some((x) => x.videoId === t.videoId)) {
@@ -1636,7 +2055,6 @@ document.getElementById("sheetAddLiked").addEventListener("click", () => {
   }
   closeActionSheet();
 });
-
 window.__addSheetTrackToPlaylist = (idx) => {
   const t = state.sheetTrack;
   const pl = state.playlists[idx];
@@ -1647,7 +2065,7 @@ window.__addSheetTrackToPlaylist = (idx) => {
   closeActionSheet();
 };
 
-/* Queue Rendering (Main Queue Page + Inline Player Queue) */
+/* Queue Rendering */
 function renderQueue() {
   const listEl = document.getElementById("queueList");
   const inlineEl = document.getElementById("inlineQueueScroll");
@@ -1686,19 +2104,17 @@ window.__playFromQueue = (i) => {
   const [selected] = state.queue.splice(i, 1);
   playTrackNow(selected, true);
 };
-
 window.__removeFromQueue = (i) => {
   if (i < 0 || i >= state.queue.length) return;
   state.queue.splice(i, 1);
   renderQueue();
 };
-
 document.getElementById("clearQueueButton").addEventListener("click", () => {
   state.queue = [];
   renderQueue();
 });
 
-/* Library Tabs: Playlists, Liked, Favorites + Importer */
+/* Library Tabs & Importer */
 document.querySelectorAll(".lib-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".lib-tab").forEach((t) => t.classList.remove("active"));
@@ -1734,8 +2150,7 @@ function renderTrackCollection(list, containerId, emptyText, removeFnName) {
 window.__playCollectionItem = (containerId, idx) => {
   const arr = containerId === "likedList" ? state.liked : state.favorites;
   if (!arr[idx]) return;
-  const remaining = arr.slice(idx + 1);
-  state.queue = [...remaining];
+  state.queue = [...arr.slice(idx + 1)];
   playTrackNow(arr[idx], true);
   goToPage("homePage");
 };
@@ -1747,8 +2162,8 @@ function renderLibraryViews() {
   document.getElementById("likedCount").textContent = String(state.liked.length);
   document.getElementById("favCount").textContent = String(state.favorites.length);
 
-  renderTrackCollection(state.liked, "likedList", "No liked songs yet. Tap the heart icon while playing.", "__removeLiked");
-  renderTrackCollection(state.favorites, "favoritesList", "No favorite songs yet. Long-press a song or tap ⋮.", "__removeFav");
+  renderTrackCollection(state.liked, "likedList", "No liked songs yet.", "__removeLiked");
+  renderTrackCollection(state.favorites, "favoritesList", "No favorite songs yet.", "__removeFav");
 
   const plEl = document.getElementById("playlistList");
   if (!state.playlists.length) {
@@ -1756,7 +2171,8 @@ function renderLibraryViews() {
     return;
   }
   plEl.innerHTML = state.playlists.map((pl, idx) => `
-    <div class="song-item" onclick="window.__loadPlaylist(${idx})">
+    <div class="song-item is-playlist-row" onclick="window.__loadPlaylist(${idx})">
+      <img src="${(pl.tracks[0] && pl.tracks[0].thumbnail) || "/logo-circle.png"}" alt="">
       <div class="song-meta">
         <div class="song-title">${escapeHtml(pl.name)}</div>
         <div class="song-channel">${pl.tracks.length} songs</div>
@@ -1792,7 +2208,6 @@ window.__deletePlaylist = (idx) => {
   saveUserLibraryToCloud();
 };
 
-/* Import YouTube or Spotify Playlist */
 document.getElementById("importPlaylistBtn").addEventListener("click", async () => {
   const url = document.getElementById("importUrlInput").value.trim();
   const name = document.getElementById("importNameInput").value.trim();
@@ -1835,12 +2250,12 @@ document.getElementById("prefAudioMode").addEventListener("change", (e) => {
   document.querySelector(".player-card")?.classList.toggle("audio-mode", state.audioMode);
 });
 document.getElementById("clearCacheBtn").addEventListener("click", () => {
-  state.lastSearchResults = [];
   document.getElementById("searchResults").innerHTML = "";
   document.getElementById("searchStatus").textContent = "Cache cleared.";
 });
 
 loadGlobalAppConfig();
+loadRecommendedPlaylists();
 renderQueue();
 renderLibraryViews();
 </script>

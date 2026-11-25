@@ -357,12 +357,107 @@
     }
     .playing-status { font-size: 0.73rem; font-weight: 800; color: var(--accent); }
 
-    /* Player Card */
+    /* Player Card: Strictly Audio-Only Default (Spinning CD + Equalizer) */
     .player-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 13px;
+    }
+
+    .audio-only-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 12px 16px;
+    }
+    .audio-only-stage.hidden { display: none; }
+
+    .cd-disc {
+      position: relative;
+      width: 164px;
+      height: 164px;
+      border-radius: 50%;
+      border: 5px solid #27272d;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      animation: tanangSpinCd 9s linear infinite;
+    }
+    .cd-disc.paused {
+      animation-play-state: paused;
+    }
+    .cd-disc img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cd-center-hole {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 28px;
+      height: 28px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: var(--bg);
+      border: 3px solid rgba(250, 204, 21, 0.55);
+    }
+    @keyframes tanangSpinCd {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .equalizer-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 26px;
+      margin-top: 14px;
+    }
+    .equalizer-bars span {
+      width: 5px;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--accent);
+      animation: tanangEqBounce 0.72s ease-in-out infinite alternate;
+    }
+    .equalizer-bars span:nth-child(2) { animation-delay: 0.14s; }
+    .equalizer-bars span:nth-child(3) { animation-delay: 0.28s; }
+    .equalizer-bars span:nth-child(4) { animation-delay: 0.42s; }
+    .equalizer-bars span:nth-child(5) { animation-delay: 0.56s; }
+    .equalizer-bars.paused span {
+      animation-play-state: paused;
+      height: 6px;
+    }
+    @keyframes tanangEqBounce {
+      from { height: 6px; }
+      to { height: 24px; }
+    }
+
+    .audio-mode-hint {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* Optional Video Stage (Hidden by default; auto-returns to Audio on Back) */
+    .video-stage {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .video-stage.active {
+      display: flex;
+    }
+    .video-stage-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     .video-frame {
       position: relative;
@@ -387,22 +482,6 @@
       display: block;
       border: 0;
     }
-    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 3.5; }
-
-    .video-placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: var(--muted);
-      background: #0b0b0d;
-      z-index: 2;
-      pointer-events: none;
-    }
-    .video-placeholder.hidden { display: none; }
 
     .track-header-row {
       display: flex;
@@ -502,6 +581,11 @@
       font-size: 0.74rem;
       cursor: pointer;
     }
+    .video-mode-button.active-watch {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
 
     .inline-queue-drawer {
       margin-top: 10px;
@@ -592,7 +676,7 @@
       border-color: var(--accent);
     }
 
-    /* Spotify-Style Compact Square Playlist Cards (Fixed Width + 2-Line Clamped Title) */
+    /* Spotify-Style Compact Square Playlist Cards */
     .spotify-playlist-strip {
       display: flex;
       gap: 10px;
@@ -1053,6 +1137,9 @@
 <body>
 <div class="mobile-shell">
 
+  <!-- Native Background Audio Stream Element (Strictly Audio-Only Default) -->
+  <audio id="tanangNativeAudio" preload="auto"></audio>
+
   <!-- Login / Register + Human Captcha Overlay -->
   <div class="auth-overlay" id="authGate">
     <div class="auth-box">
@@ -1121,24 +1208,39 @@
 
       <div class="section-heading">
         <h2>NOW PLAYING</h2>
-        <span class="playing-status" id="playingStatus">READY</span>
+        <span class="playing-status" id="playingStatus">AUDIO ONLY · READY</span>
       </div>
 
-      <div class="player-card">
-        <div class="video-frame" id="videoFrame">
-          <div class="video-crop-wrap">
-            <div id="youtubePlayer"></div>
+      <div class="player-card audio-mode">
+        <!-- STRICT AUDIO-ONLY STAGE (Spinning CD + Thumbnail + Equalizer) -->
+        <div class="audio-only-stage" id="audioOnlyStage">
+          <div class="cd-disc paused" id="cdDisc">
+            <img id="cdThumbnailImg" src="/logo-circle.png" alt="Track Thumbnail">
+            <div class="cd-center-hole"></div>
           </div>
-          <div class="video-placeholder" id="videoPlaceholder">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <span>Search a movie, hero, or song</span>
+          <div class="equalizer-bars paused" id="equalizerBars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="audio-mode-hint" id="audioModeHint">Strictly Audio Mode · Background Ready</div>
+        </div>
+
+        <!-- OPTIONAL VIDEO STAGE (Opens only on Watch Video; auto-returns to Audio on Back) -->
+        <div class="video-stage" id="videoStage">
+          <div class="video-stage-bar">
+            <span style="font-size: 0.74rem; font-weight: 800; color: var(--accent);">VIDEO MODE</span>
+            <button type="button" class="text-button accent" id="backToAudioBtn">← BACK TO AUDIO</button>
+          </div>
+          <div class="video-frame" id="videoFrame">
+            <div class="video-crop-wrap">
+              <div id="youtubePlayer"></div>
+            </div>
           </div>
         </div>
 
         <div class="track-header-row">
           <div class="track-info">
             <h2 id="currentTitle">Choose a song</h2>
-            <p id="currentChannel">Tap Search to start listening</p>
+            <p id="currentChannel">Tap Search to start listening in Audio Mode</p>
           </div>
           <button type="button" class="dots-btn" id="nowPlayingDotsBtn" aria-label="Track options">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
@@ -1175,7 +1277,7 @@
 
         <div class="player-secondary-row">
           <button class="video-mode-button" id="videoModeButton" type="button" onclick="togglePlaybackMode()">
-            COMPACT VIEW
+            WATCH VIDEO
           </button>
           <button class="video-mode-button" id="toggleInlineQueueBtn" type="button">
             QUEUE (<span id="inlineQueueCount">0</span>) ▾
@@ -1197,7 +1299,7 @@
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <!-- Spotify-Style Compact Square Playlist Cards (Max 2 Lines Title) -->
+      <!-- Spotify-Style Compact Square Playlist Cards -->
       <div class="section-heading">
         <h2>RECOMMENDED PLAYLISTS</h2>
         <span class="status-text" style="font-size: 0.72rem;">FOR YOU</span>
@@ -1335,8 +1437,8 @@
           <input type="checkbox" id="prefAutoQueue" checked style="accent-color: var(--accent); width: 18px; height: 18px;">
         </div>
         <div class="settings-row">
-          <span>Compact Audio Mode</span>
-          <input type="checkbox" id="prefAudioMode" style="accent-color: var(--accent); width: 18px; height: 18px;">
+          <span>Strict Audio Mode Default</span>
+          <input type="checkbox" id="prefAudioMode" checked style="accent-color: var(--accent); width: 18px; height: 18px;">
         </div>
         <div class="settings-row">
           <span>Clear Search Cache</span>
@@ -1469,45 +1571,6 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
-// 1. Prevent YouTube iframe from detecting background/hidden tab state
-try {
-  Object.defineProperty(document, "hidden", { get: () => false, configurable: true });
-  Object.defineProperty(document, "visibilityState", { get: () => "visible", configurable: true });
-} catch {}
-
-document.addEventListener(
-  "visibilitychange",
-  (e) => {
-    e.stopImmediatePropagation();
-    if (state.currentTrack && !state.userPausedManually && ytPlayer && state.playerReady) {
-      setTimeout(() => {
-        if (!state.userPausedManually) ytPlayer.playVideo();
-      }, 150);
-    }
-  },
-  true
-);
-
-// 2. Keep an active Web Audio context alive so Android treats Chrome as an active audio app
-let bgAudioCtx = null;
-function unlockBackgroundAudio() {
-  try {
-    if (!bgAudioCtx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      bgAudioCtx = new AudioCtx();
-      const osc = bgAudioCtx.createOscillator();
-      const gain = bgAudioCtx.createGain();
-      gain.gain.value = 0.0001;
-      osc.connect(gain);
-      gain.connect(bgAudioCtx.destination);
-      osc.start();
-    }
-    if (bgAudioCtx.state === "suspended") bgAudioCtx.resume();
-  } catch {}
-}
-document.addEventListener("pointerdown", unlockBackgroundAudio, { once: true });
-
 const PLAY_SVG = `<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>`;
 const PAUSE_SVG = `<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>`;
 
@@ -1540,13 +1603,16 @@ const state = {
   searchFilter: "all",
   sheetTrack: null,
   shuffle: false,
-  audioMode: false,
+  audioMode: true, // Strictly Audio-Only by default
+  videoModeActive: false,
   autoQueueRelated: true,
   playerReady: false,
   isPlaying: false,
   userPausedManually: false,
+  isSeeking: false,
 };
 
+const nativeAudio = document.getElementById("tanangNativeAudio");
 let ytPlayer = null;
 let progressTimer = null;
 
@@ -1577,7 +1643,7 @@ function generateCaptcha() {
 }
 document.getElementById("refreshCaptchaBtn").addEventListener("click", generateCaptcha);
 
-/* Session Persistence (APK + Remember Me + 15-Day Idle Auto-Logout) */
+/* Session Persistence */
 function isStandaloneApp() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -1699,6 +1765,11 @@ function goStepBack() {
 }
 
 window.addEventListener("popstate", () => {
+  // Automatically switch from Video Mode back to Audio-Only mode on Back press
+  if (state.videoModeActive) {
+    exitVideoModeToAudio(true);
+    return;
+  }
   if (!document.getElementById("actionSheetBackdrop").classList.contains("hidden")) {
     closeActionSheet();
     try { window.history.pushState({ pageId: state.currentPage }, "", `#${state.currentPage}`); } catch {}
@@ -1709,12 +1780,17 @@ window.addEventListener("popstate", () => {
   }
 });
 
-// Seed initial browser history state so first Android hardware Back does not close app
 try {
   window.history.replaceState({ pageId: "homePage" }, "", "#homePage");
 } catch {}
 
-document.getElementById("globalBackBtn").addEventListener("click", goStepBack);
+document.getElementById("globalBackBtn").addEventListener("click", () => {
+  if (state.videoModeActive) {
+    exitVideoModeToAudio(true);
+    return;
+  }
+  goStepBack();
+});
 document.querySelectorAll("[data-page]").forEach((btn) => {
   btn.addEventListener("click", () => goToPage(btn.dataset.page, true));
 });
@@ -1923,7 +1999,7 @@ document.getElementById("searchInnerBackBtn").addEventListener("click", () => {
   }
 });
 
-/* Spotify-Style Compact Square Recommended Playlists (2-Line Clamped Title) */
+/* Spotify-Style Compact Square Recommended Playlists */
 async function loadRecommendedPlaylists() {
   const seed = state.recentQueries[0] || "Telugu hit songs";
   const grid = document.getElementById("recommendedPlaylistsGrid");
@@ -1961,7 +2037,7 @@ window.__openSearchedPlaylist = async (playlistId) => {
   } catch {}
 };
 
-/* 16:9 Full Banner / Ad Carousel (Redirects ONLY if ad_url exists) */
+/* 16:9 Full Banner / Ad Carousel (1 · 2 · 3) */
 function renderCarousel(slides, showAds = true) {
   state.slides = slides || [];
   state.showAds = showAds;
@@ -2010,7 +2086,7 @@ window.__triggerSlide = (idx) => {
   const s = state.slides[idx];
   if (!s) return;
   const targetUrl = (s.ad_url || "").trim();
-  if (!targetUrl) return; // Normal image: no redirect powers
+  if (!targetUrl) return;
   window.open(targetUrl, "_blank", "noopener,noreferrer");
 };
 
@@ -2072,13 +2148,12 @@ document.getElementById("verifyAdminKeyBtn").addEventListener("click", async () 
   }
 });
 
-/* Crop any uploaded image or URL into a compact 16:9 JPEG thumbnail */
 function cropSourceTo16x9DataUrl(srcUrl, callback) {
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
     const targetW = 640;
-    const targetH = 360; // 16:9 ratio
+    const targetH = 360;
     const canvas = document.createElement("canvas");
     canvas.width = targetW;
     canvas.height = targetH;
@@ -2100,7 +2175,7 @@ function cropSourceTo16x9DataUrl(srcUrl, callback) {
     try {
       callback(canvas.toDataURL("image/jpeg", 0.82));
     } catch {
-      callback(srcUrl); // Fallback if external server blocks CORS canvas export
+      callback(srcUrl);
     }
   };
   img.onerror = () => callback(srcUrl);
@@ -2208,13 +2283,20 @@ document.getElementById("saveAdminConfigBtn").addEventListener("click", async ()
   }
 });
 
-/* Player & Background Playback Persistence */
-function syncPlayPauseIcons(playing) {
+/* Audio-First Player + Equalizer + Spinning CD + Optional Watch Video */
+function syncAudioVisuals(playing) {
   state.isPlaying = playing;
+  const activeAudioVisual = playing && !state.videoModeActive;
+  document.getElementById("cdDisc")?.classList.toggle("paused", !activeAudioVisual);
+  document.getElementById("equalizerBars")?.classList.toggle("paused", !activeAudioVisual);
+
   const svg = playing ? PAUSE_SVG : PLAY_SVG;
   document.getElementById("playPauseIcon").innerHTML = svg;
   document.getElementById("miniPlayIcon").innerHTML = svg;
-  document.getElementById("playingStatus").textContent = playing ? "PLAYING" : "PAUSED";
+  document.getElementById("playingStatus").textContent = state.videoModeActive
+    ? (playing ? "VIDEO PLAYING" : "VIDEO PAUSED")
+    : (playing ? "AUDIO ONLY · PLAYING" : "AUDIO ONLY · PAUSED");
+
   if ("mediaSession" in navigator) {
     navigator.mediaSession.playbackState = playing ? "playing" : "paused";
   }
@@ -2225,7 +2307,7 @@ window.onYouTubeIframeAPIReady = function () {
     width: "100%",
     height: "100%",
     playerVars: {
-      autoplay: 1,
+      autoplay: 0,
       controls: 0,
       disablekb: 1,
       fs: 0,
@@ -2238,23 +2320,16 @@ window.onYouTubeIframeAPIReady = function () {
     events: {
       onReady: () => {
         state.playerReady = true;
-        startProgressLoop();
       },
       onStateChange: (event) => {
+        if (!state.videoModeActive) return;
         if (event.data === YT.PlayerState.PLAYING) {
           state.userPausedManually = false;
-          syncPlayPauseIcons(true);
-          updateMediaSession();
+          syncAudioVisuals(true);
         } else if (event.data === YT.PlayerState.PAUSED) {
-          // If browser auto-paused when switching apps (not user tap), resume immediately
-          if (document.hidden && !state.userPausedManually && state.currentTrack) {
-            setTimeout(() => {
-              if (!state.userPausedManually) ytPlayer?.playVideo?.();
-            }, 150);
-          } else {
-            syncPlayPauseIcons(false);
-          }
+          if (!state.userPausedManually) syncAudioVisuals(false);
         } else if (event.data === YT.PlayerState.ENDED) {
+          exitVideoModeToAudio(false);
           playNextFromQueue();
         }
       },
@@ -2262,29 +2337,23 @@ window.onYouTubeIframeAPIReady = function () {
   });
 };
 
-// Keep background playback alive when switching to Chrome or another app (stops only if closed)
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    if (state.isPlaying && !state.userPausedManually && ytPlayer && state.playerReady) {
-      setTimeout(() => {
-        if (!state.userPausedManually) ytPlayer.playVideo();
-      }, 200);
-    }
-  } else if (state.user) {
-    const raw = localStorage.getItem("tanang_session");
-    if (raw) {
-      try {
-        const sess = JSON.parse(raw);
-        if (Date.now() - Number(sess.last_active_at || 0) > FIFTEEN_DAYS_MS) {
-          clearSession();
-          state.token = null;
-          document.getElementById("authGate").classList.remove("hidden");
-          generateCaptcha();
-          return;
-        }
-      } catch {}
-    }
-    touchSessionActivity();
+nativeAudio.addEventListener("play", () => {
+  if (!state.videoModeActive) {
+    state.userPausedManually = false;
+    syncAudioVisuals(true);
+    updateMediaSession();
+  }
+});
+
+nativeAudio.addEventListener("pause", () => {
+  if (!state.videoModeActive) {
+    syncAudioVisuals(false);
+  }
+});
+
+nativeAudio.addEventListener("ended", () => {
+  if (!state.videoModeActive) {
+    playNextFromQueue();
   }
 });
 
@@ -2298,11 +2367,13 @@ function updateMediaSession() {
   });
   navigator.mediaSession.setActionHandler("play", () => {
     state.userPausedManually = false;
-    ytPlayer?.playVideo?.();
+    if (state.videoModeActive && ytPlayer?.playVideo) ytPlayer.playVideo();
+    else nativeAudio.play().catch(() => {});
   });
   navigator.mediaSession.setActionHandler("pause", () => {
     state.userPausedManually = true;
-    ytPlayer?.pauseVideo?.();
+    if (state.videoModeActive && ytPlayer?.pauseVideo) ytPlayer.pauseVideo();
+    else nativeAudio.pause();
   });
   navigator.mediaSession.setActionHandler("previoustrack", playPrevTrack);
   navigator.mediaSession.setActionHandler("nexttrack", playNextFromQueue);
@@ -2313,25 +2384,48 @@ function formatTime(sec) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function startProgressLoop() {
-  if (progressTimer) clearInterval(progressTimer);
-  progressTimer = setInterval(() => {
-    if (!ytPlayer || !state.playerReady || typeof ytPlayer.getCurrentTime !== "function") return;
-    const cur = ytPlayer.getCurrentTime() || 0;
-    const dur = ytPlayer.getDuration() || 0;
-    document.getElementById("currentTime").textContent = formatTime(cur);
-    document.getElementById("totalTime").textContent = formatTime(dur);
-    if (dur > 0) document.getElementById("seekBar").value = String(Math.round((cur / dur) * 100));
-  }, 600);
-}
+setInterval(() => {
+  if (state.isSeeking) return;
+  let cur = 0;
+  let dur = 0;
+  if (state.videoModeActive && ytPlayer && state.playerReady && typeof ytPlayer.getCurrentTime === "function") {
+    cur = ytPlayer.getCurrentTime() || 0;
+    dur = ytPlayer.getDuration() || 0;
+  } else {
+    cur = nativeAudio.currentTime || 0;
+    dur = nativeAudio.duration || 0;
+  }
+  document.getElementById("currentTime").textContent = formatTime(cur);
+  document.getElementById("totalTime").textContent = formatTime(dur);
+  if (dur > 0) {
+    document.getElementById("seekBar").value = String(Math.round((cur / dur) * 100));
+  }
+}, 500);
 
 document.getElementById("seekBar").addEventListener("input", (e) => {
-  if (!ytPlayer || !state.playerReady || typeof ytPlayer.getDuration !== "function") return;
-  const dur = ytPlayer.getDuration() || 0;
-  if (dur > 0) ytPlayer.seekTo((Number(e.target.value) / 100) * dur, true);
+  state.isSeeking = true;
+  const pct = Number(e.target.value) / 100;
+  if (state.videoModeActive && ytPlayer && state.playerReady && typeof ytPlayer.getDuration === "function") {
+    const dur = ytPlayer.getDuration() || 0;
+    if (dur > 0) ytPlayer.seekTo(pct * dur, true);
+  } else if (nativeAudio.duration) {
+    nativeAudio.currentTime = pct * nativeAudio.duration;
+  }
+  setTimeout(() => { state.isSeeking = false; }, 120);
 });
 
-function playTrackNow(track, pushPrev = true) {
+async function resolveAudioUrl(videoId) {
+  try {
+    const res = await fetch(`/api/stream/${encodeURIComponent(videoId)}`);
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.audio_url || "";
+  } catch {
+    return "";
+  }
+}
+
+async function playTrackNow(track, pushPrev = true) {
   if (!track || !track.videoId) return;
   if (pushPrev && state.currentTrack && state.currentTrack.videoId !== track.videoId) {
     state.history.push(state.currentTrack);
@@ -2339,23 +2433,97 @@ function playTrackNow(track, pushPrev = true) {
   state.currentTrack = track;
   state.userPausedManually = false;
 
+  // Always start in strictly Audio-Only mode
+  if (state.videoModeActive) {
+    exitVideoModeToAudio(false);
+  }
+
   document.getElementById("currentTitle").textContent = decodeHtml(track.title);
   document.getElementById("currentChannel").textContent = decodeHtml(track.artist);
-  document.getElementById("videoPlaceholder").classList.add("hidden");
-
-  if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
-    ytPlayer.loadVideoById(track.videoId);
+  if (track.thumbnail) {
+    document.getElementById("cdThumbnailImg").src = track.thumbnail;
   }
+  document.getElementById("playingStatus").textContent = "AUDIO ONLY · LOADING...";
+
   updateMediaSession();
   renderQueue();
   updateMiniPlayer();
   touchSessionActivity();
+
+  const streamUrl = await resolveAudioUrl(track.videoId);
+  if (streamUrl) {
+    nativeAudio.src = streamUrl;
+    nativeAudio.play().catch(() => {});
+  } else if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
+    // Fallback if stream endpoint isn't configured yet
+    ytPlayer.loadVideoById(track.videoId);
+    syncAudioVisuals(true);
+  }
 }
+
+function enterVideoMode() {
+  if (!state.currentTrack || !state.currentTrack.videoId) return;
+  const resumeSec = Math.floor(nativeAudio.currentTime || 0);
+  nativeAudio.pause();
+
+  state.videoModeActive = true;
+  document.getElementById("audioOnlyStage").classList.add("hidden");
+  document.getElementById("videoStage").classList.add("active");
+  document.getElementById("videoModeButton").textContent = "AUDIO MODE";
+  document.getElementById("videoModeButton").classList.add("active-watch");
+
+  if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
+    ytPlayer.loadVideoById({ videoId: state.currentTrack.videoId, startSeconds: resumeSec });
+    ytPlayer.playVideo();
+  }
+  syncAudioVisuals(true);
+
+  try {
+    window.history.pushState({ tanangVideoModal: true, pageId: state.currentPage }, "", `#${state.currentPage}`);
+  } catch {}
+}
+
+function exitVideoModeToAudio(resumeAudio = true) {
+  let resumeSec = Math.floor(nativeAudio.currentTime || 0);
+  if (ytPlayer && state.playerReady && typeof ytPlayer.getCurrentTime === "function") {
+    const ytSec = Math.floor(ytPlayer.getCurrentTime() || 0);
+    if (ytSec > 0) resumeSec = ytSec;
+    if (typeof ytPlayer.pauseVideo === "function") ytPlayer.pauseVideo();
+  }
+
+  state.videoModeActive = false;
+  document.getElementById("videoStage").classList.remove("active");
+  document.getElementById("audioOnlyStage").classList.remove("hidden");
+  document.getElementById("videoModeButton").textContent = "WATCH VIDEO";
+  document.getElementById("videoModeButton").classList.remove("active-watch");
+
+  if (resumeAudio && nativeAudio.src) {
+    if (resumeSec > 0 && Math.abs((nativeAudio.currentTime || 0) - resumeSec) > 1) {
+      nativeAudio.currentTime = resumeSec;
+    }
+    state.userPausedManually = false;
+    nativeAudio.play().catch(() => {});
+  }
+  syncAudioVisuals(!nativeAudio.paused && resumeAudio);
+}
+
+window.togglePlaybackMode = function () {
+  if (!state.currentTrack) return;
+  if (state.videoModeActive) {
+    exitVideoModeToAudio(true);
+  } else {
+    enterVideoMode();
+  }
+};
+
+document.getElementById("backToAudioBtn").addEventListener("click", () => {
+  exitVideoModeToAudio(true);
+});
 
 function playNextFromQueue() {
   if (!state.queue.length) {
-    syncPlayPauseIcons(false);
-    document.getElementById("playingStatus").textContent = "FINISHED";
+    syncAudioVisuals(false);
+    document.getElementById("playingStatus").textContent = "AUDIO ONLY · FINISHED";
     return;
   }
   const idx = state.shuffle ? Math.floor(Math.random() * state.queue.length) : 0;
@@ -2370,13 +2538,35 @@ function playPrevTrack() {
 }
 
 function togglePlayPause() {
-  if (!ytPlayer || !state.playerReady) return;
-  if (state.isPlaying) {
-    state.userPausedManually = true;
-    ytPlayer.pauseVideo();
-  } else {
-    state.userPausedManually = false;
-    ytPlayer.playVideo();
+  if (state.videoModeActive && ytPlayer && state.playerReady) {
+    if (state.isPlaying) {
+      state.userPausedManually = true;
+      ytPlayer.pauseVideo();
+      syncAudioVisuals(false);
+    } else {
+      state.userPausedManually = false;
+      ytPlayer.playVideo();
+      syncAudioVisuals(true);
+    }
+    return;
+  }
+
+  if (nativeAudio.src) {
+    if (nativeAudio.paused) {
+      state.userPausedManually = false;
+      nativeAudio.play().catch(() => {});
+    } else {
+      state.userPausedManually = true;
+      nativeAudio.pause();
+    }
+  } else if (ytPlayer && state.playerReady) {
+    if (state.isPlaying) {
+      state.userPausedManually = true;
+      ytPlayer.pauseVideo();
+    } else {
+      state.userPausedManually = false;
+      ytPlayer.playVideo();
+    }
   }
 }
 
@@ -2390,16 +2580,11 @@ document.getElementById("shuffleButton").addEventListener("click", (e) => {
   e.currentTarget.classList.toggle("active", state.shuffle);
 });
 document.getElementById("fullscreenButton").addEventListener("click", () => {
-  const el = document.getElementById("videoFrame");
-  if (el?.requestFullscreen) el.requestFullscreen().catch(() => {});
+  const target = state.videoModeActive
+    ? document.getElementById("videoFrame")
+    : document.getElementById("audioOnlyStage");
+  if (target?.requestFullscreen) target.requestFullscreen().catch(() => {});
 });
-
-window.togglePlaybackMode = function () {
-  state.audioMode = !state.audioMode;
-  document.querySelector(".player-card")?.classList.toggle("audio-mode", state.audioMode);
-  document.getElementById("videoModeButton").textContent = state.audioMode ? "WATCH VIDEO" : "COMPACT VIEW";
-  document.getElementById("prefAudioMode").checked = state.audioMode;
-};
 
 document.getElementById("toggleInlineQueueBtn").addEventListener("click", () => {
   document.getElementById("inlineQueueDrawer").classList.toggle("hidden");
@@ -2416,7 +2601,7 @@ function updateMiniPlayer() {
     return;
   }
   bar.classList.remove("hidden");
-  document.getElementById("miniThumb").src = t.thumbnail || "";
+  document.getElementById("miniThumb").src = t.thumbnail || "/logo-circle.png";
   document.getElementById("miniTitle").textContent = decodeHtml(t.title);
   document.getElementById("miniArtist").textContent = decodeHtml(t.artist);
   const isLiked = state.liked.some((x) => x.videoId === t.videoId);
@@ -2778,7 +2963,9 @@ document.getElementById("prefAutoQueue").addEventListener("change", (e) => {
 });
 document.getElementById("prefAudioMode").addEventListener("change", (e) => {
   state.audioMode = e.target.checked;
-  document.querySelector(".player-card")?.classList.toggle("audio-mode", state.audioMode);
+  if (state.audioMode && state.videoModeActive) {
+    exitVideoModeToAudio(true);
+  }
 });
 document.getElementById("clearCacheBtn").addEventListener("click", () => {
   document.getElementById("searchResults").innerHTML = "";

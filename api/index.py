@@ -3,7 +3,7 @@ import hmac
 import os
 import secrets
 import requests
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, make_response, request, send_from_directory
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
@@ -51,24 +51,29 @@ def sign_session_token(username: str, secret: str) -> str:
     return f"{username}:{nonce}:{sig}"
 
 
-@app.get("/")
+@app.route("/", methods=["GET"])
 def serve_home():
     return send_from_directory(PUBLIC_DIR, "index.html")
 
 
-@app.get("/api/health")
+@app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({
         "status": "ok",
         "youtube_key_configured": bool(os.environ.get("YOUTUBE_API_KEY")),
         "auth_secret_configured": bool(os.environ.get("AUTH_SECRET")),
-    })
+    }), 200
 
 
-@app.post("/api/auth")
+@app.route("/api/auth", methods=["GET", "POST", "OPTIONS"])
 def auth():
+    if request.method == "OPTIONS":
+        return make_response("", 204)
+    if request.method == "GET":
+        return jsonify({"status": "auth endpoint ready", "methods": ["POST"]}), 200
+
     data = request.get_json(silent=True) or {}
-    action = data.get("action")
+    action = (data.get("action") or "").strip().lower()
     secret = os.environ.get("AUTH_SECRET", "dev-only-change-in-prod")
 
     if action == "register":
@@ -94,7 +99,7 @@ def auth():
     return jsonify({"error": "Supported actions: register, verify"}), 400
 
 
-@app.get("/api/youtube_search")
+@app.route("/api/youtube_search", methods=["GET"])
 def youtube_search():
     query = (request.args.get("q") or "").strip().lower()
     if not query:

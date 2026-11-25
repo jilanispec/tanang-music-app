@@ -5,21 +5,489 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090909">
   <title>TANANG MUSIC</title>
-  <link rel="stylesheet" href="/style.css">
+  <style>
+    :root {
+      --bg: #090909;
+      --surface: #121316;
+      --surface-2: #191b20;
+      --border: #252830;
+      --text: #f5f5f5;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 9, 9, 0.97);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .auth-overlay.hidden { display: none; }
+
+    .auth-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .auth-box h2 { margin: 0 0 6px; font-size: 1.2rem; }
+    .auth-sub { margin: 0 0 14px; color: var(--muted); font-size: 0.88rem; }
+
+    .auth-box input {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .auth-actions { display: flex; gap: 8px; }
+    .auth-actions button {
+      flex: 1;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--accent);
+      color: #051109;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .auth-actions .ghost-btn {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .hash-box {
+      margin-top: 12px;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      font-size: 0.78rem;
+    }
+    .hash-box span { display: block; color: var(--muted); margin-bottom: 4px; }
+    .hash-box code { word-break: break-all; color: #86efac; }
+    .auth-status { margin: 10px 0 0; font-size: 0.84rem; color: var(--muted); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(9, 9, 9, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      font-size: 1rem;
+    }
+    .brand b { color: var(--accent); font-weight: 800; }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: #051109;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .room-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .app-main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 18px 16px 96px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 { margin: 0 0 6px; font-size: 1.75rem; }
+    h1 span { color: var(--accent); }
+    .welcome p { margin: 0; color: var(--muted); }
+
+    .section-heading, .results-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0 10px;
+    }
+    .section-heading h2, .results-heading h2 {
+      margin: 0;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .playing-status { font-size: 0.75rem; font-weight: 700; color: var(--accent); }
+
+    .player-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #050506;
+      border: 1px solid var(--border);
+    }
+    .video-frame iframe,
+    .video-frame #youtubePlayer {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
+    }
+    .player-card.audio-mode .video-frame { aspect-ratio: 16 / 5; }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--muted);
+      background: #0b0c0e;
+      pointer-events: none;
+    }
+    .video-placeholder.hidden { display: none; }
+
+    .track-info { margin: 12px 0 8px; }
+    .track-info h2 { margin: 0; font-size: 1.05rem; }
+    .track-info p { margin: 3px 0 0; font-size: 0.86rem; color: var(--muted); }
+
+    .progress-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin: 10px 0;
+    }
+    #seekBar { flex: 1; accent-color: var(--accent); cursor: pointer; }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .icon-button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .icon-button.main-play {
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #051109;
+      border: none;
+    }
+    .icon-button.main-play svg { fill: currentColor; stroke: none; }
+
+    .video-mode-button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+    }
+
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .zoom-controls > div { display: flex; gap: 6px; }
+    .small-icon {
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .home-actions { display: grid; gap: 10px; margin-top: 16px; }
+    .feature-card {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .feature-card b { display: block; font-size: 0.95rem; }
+    .feature-card small { color: var(--muted); font-size: 0.8rem; }
+    .feature-arrow { margin-left: auto; font-size: 1.3rem; color: var(--muted); }
+
+    .search-box, .create-playlist-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 8px 6px 12px;
+    }
+    .search-box input, .create-playlist-box input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .search-box button, .create-playlist-box button {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      color: #051109;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .status-text { color: var(--muted); font-size: 0.85rem; }
+    .text-button {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .song-list { display: grid; gap: 10px; }
+    .song-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .song-item img {
+      width: 58px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .song-meta { flex: 1; min-width: 0; }
+    .song-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .song-channel { font-size: 0.78rem; color: var(--muted); }
+    .song-actions { display: flex; gap: 6px; }
+    .song-actions button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .song-actions button.primary {
+      background: var(--accent);
+      color: #051109;
+      border: none;
+      font-weight: 700;
+    }
+
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .settings-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .settings-card h2 { margin: 0 0 4px; font-size: 1rem; }
+    .settings-card p { margin: 0 0 10px; color: var(--muted); font-size: 0.88rem; }
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+      font-size: 0.86rem;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(12, 13, 16, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 6px 2px;
+      cursor: pointer;
+    }
+    .nav-item.active { color: var(--accent); }
+  </style>
 </head>
 <body>
 
-<!-- Hash / Password Gate -->
 <div class="auth-overlay" id="authGate">
   <div class="auth-box">
-    <div class="brand" style="margin-bottom: 12px;">
+    <div class="brand" style="margin-bottom: 14px;">
       <span class="brand-mark">T</span>
       <span>TANANG <b>MUSIC</b></span>
     </div>
     <h2>Secure Access</h2>
     <p class="auth-sub">Enter a username and password or hash-string secret (8+ chars).</p>
 
-    <input id="authUsername" type="text" placeholder="Username (e.g. jilan)" autocomplete="username">
+    <input id="authUsername" type="text" placeholder="Username (e.g. jilan_9999)" autocomplete="username">
     <input id="authSecret" type="password" placeholder="Password or hash secret (8+ chars)" autocomplete="current-password">
 
     <div class="auth-actions">
@@ -28,7 +496,7 @@
     </div>
 
     <div class="hash-box" id="hashPreviewBox" style="display: none;">
-      <span>Generated Salted Hash (for testing):</span>
+      <span>Generated Salted Hash:</span>
       <code id="hashPreviewValue"></code>
     </div>
 
@@ -45,7 +513,6 @@
 </header>
 
 <main class="app-main">
-
   <section class="page active" id="homePage">
     <div class="welcome">
       <p class="eyebrow">YOUR MUSIC SPACE</p>
@@ -62,9 +529,7 @@
       <div class="video-frame" id="videoFrame">
         <div id="youtubePlayer"></div>
         <div class="video-placeholder" id="videoPlaceholder">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           <span>Nothing playing</span>
         </div>
       </div>
@@ -102,12 +567,7 @@
         </button>
       </div>
 
-      <button
-        class="video-mode-button"
-        id="videoModeButton"
-        type="button"
-        onclick="togglePlaybackMode()"
-      >
+      <button class="video-mode-button" id="videoModeButton" type="button" onclick="togglePlaybackMode()">
         WATCH VIDEO
       </button>
 
@@ -156,7 +616,7 @@
 
     <div class="results-heading">
       <h2>SEARCH RESULTS</h2>
-      <span id="resultCount">UP TO 10</span>
+      <span id="resultCount">UP TO 8</span>
     </div>
 
     <p id="searchStatus" class="status-text">Search for a song or artist.</p>
@@ -204,19 +664,18 @@
         <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 0 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 0 1 0-4h.2a2 2 0 0 0 1.4-3.4l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 0 1 4 0v.2a2 2 0 0 0 1.4 1.4l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 0 1 0 4h-.2a2 2 0 0 0-1.4 3.4Z"/></svg>
       </div>
       <h2>TANANG MUSIC</h2>
-      <p>Personal &amp; room music player.</p>
+      <p>Personal music space.</p>
       <div class="settings-row"><span>User</span><b id="settingsUser">Not logged in</b></div>
       <div class="settings-row"><span>Room</span><b id="settingsRoom">Personal room</b></div>
       <div class="settings-row"><span>Player</span><b>YouTube embedded player</b></div>
     </div>
 
     <div class="settings-card room-help">
-      <h2>CREATE A MUSIC ROOM</h2>
-      <p>Use <b>PERSONAL</b> mode for your own queue and playlists, or lock your session key anytime.</p>
+      <h2>SESSION SECURITY</h2>
+      <p>Lock your session anytime to require your password/hash key again.</p>
       <button type="button" id="lockSessionBtn" class="text-button" style="margin-top: 10px;">LOCK SESSION</button>
     </div>
   </section>
-
 </main>
 
 <nav class="bottom-nav">
@@ -243,6 +702,369 @@
 </nav>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="/app.js"></script>
+<script>
+const state = {
+  user: null,
+  token: null,
+  queue: [],
+  currentIndex: -1,
+  shuffle: false,
+  zoom: 1,
+  audioMode: false,
+  playlists: [],
+  playerReady: false,
+  isPlaying: false,
+};
+
+let ytPlayer = null;
+let progressTimer = null;
+
+function goToPage(pageId) {
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  document.getElementById(pageId)?.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === pageId);
+  });
+}
+
+document.querySelectorAll("[data-page]").forEach((btn) => {
+  btn.addEventListener("click", () => goToPage(btn.dataset.page));
+});
+document.querySelectorAll("[data-go]").forEach((el) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    goToPage(el.dataset.go);
+  });
+});
+
+async function handleAuth(action) {
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authSecret").value;
+  const statusEl = document.getElementById("authStatus");
+  const hashBox = document.getElementById("hashPreviewBox");
+  const hashVal = document.getElementById("hashPreviewValue");
+
+  if (!username || password.length < 8) {
+    statusEl.textContent = "Enter a username and secret of at least 8 characters.";
+    return;
+  }
+
+  statusEl.textContent = "Verifying with server...";
+  const storedHash = sessionStorage.getItem("tanang_test_hash") || "";
+  const payload = { action, username, password };
+  if (action === "verify") payload.password_hash = storedHash;
+
+  const res = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    statusEl.textContent = data.error || "Authentication failed.";
+    return;
+  }
+
+  if (action === "register") {
+    sessionStorage.setItem("tanang_test_hash", data.password_hash);
+    hashBox.style.display = "block";
+    hashVal.textContent = data.password_hash;
+    statusEl.textContent = "Salted scrypt hash generated! Click 'Verify & Login' to enter.";
+    return;
+  }
+
+  state.user = username;
+  state.token = data.token;
+  document.getElementById("settingsUser").textContent = username;
+  document.getElementById("authGate").classList.add("hidden");
+  loadPlaylists();
+}
+
+document.getElementById("registerHashBtn").addEventListener("click", () => handleAuth("register"));
+document.getElementById("loginHashBtn").addEventListener("click", () => handleAuth("verify"));
+document.getElementById("lockSessionBtn").addEventListener("click", () => {
+  state.token = null;
+  document.getElementById("authGate").classList.remove("hidden");
+  document.getElementById("authStatus").textContent = "Session locked.";
+});
+
+window.onYouTubeIframeAPIReady = function () {
+  ytPlayer = new YT.Player("youtubePlayer", {
+    width: "100%",
+    height: "100%",
+    playerVars: { autoplay: 1, controls: 0, playsinline: 1, rel: 0 },
+    events: {
+      onReady: () => {
+        state.playerReady = true;
+        startProgressLoop();
+      },
+      onStateChange: (event) => {
+        if (event.data === YT.PlayerState.PLAYING) {
+          state.isPlaying = true;
+          document.getElementById("playingStatus").textContent = "PLAYING";
+          updateMediaSession();
+        } else if (event.data === YT.PlayerState.PAUSED) {
+          state.isPlaying = false;
+          document.getElementById("playingStatus").textContent = "PAUSED";
+        } else if (event.data === YT.PlayerState.ENDED) {
+          playNextTrack();
+        }
+      },
+    },
+  });
+};
+
+function formatTime(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function startProgressLoop() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    if (!ytPlayer || !state.playerReady || typeof ytPlayer.getCurrentTime !== "function") return;
+    const cur = ytPlayer.getCurrentTime() || 0;
+    const dur = ytPlayer.getDuration() || 0;
+    document.getElementById("currentTime").textContent = formatTime(cur);
+    document.getElementById("totalTime").textContent = formatTime(dur);
+    if (dur > 0) document.getElementById("seekBar").value = String(Math.round((cur / dur) * 100));
+  }, 600);
+}
+
+document.getElementById("seekBar").addEventListener("input", (e) => {
+  if (!ytPlayer || !state.playerReady || typeof ytPlayer.getDuration !== "function") return;
+  const dur = ytPlayer.getDuration() || 0;
+  if (dur > 0) ytPlayer.seekTo((Number(e.target.value) / 100) * dur, true);
+});
+
+function loadAndPlayIndex(idx) {
+  if (idx < 0 || idx >= state.queue.length) return;
+  state.currentIndex = idx;
+  const track = state.queue[idx];
+  document.getElementById("currentTitle").textContent = track.title;
+  document.getElementById("currentChannel").textContent = track.artist;
+  document.getElementById("videoPlaceholder").classList.add("hidden");
+
+  if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
+    ytPlayer.loadVideoById(track.videoId);
+  }
+  updateMediaSession();
+  renderQueue();
+}
+
+function updateMediaSession() {
+  const track = state.queue[state.currentIndex];
+  if (!track || !("mediaSession" in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title,
+    artist: track.artist,
+    artwork: track.thumbnail ? [{ src: track.thumbnail, sizes: "480x360", type: "image/jpeg" }] : [],
+  });
+  navigator.mediaSession.setActionHandler("previoustrack", playPrevTrack);
+  navigator.mediaSession.setActionHandler("nexttrack", playNextTrack);
+}
+
+function playNextTrack() {
+  if (!state.queue.length) return;
+  if (state.shuffle) loadAndPlayIndex(Math.floor(Math.random() * state.queue.length));
+  else if (state.currentIndex + 1 < state.queue.length) loadAndPlayIndex(state.currentIndex + 1);
+}
+
+function playPrevTrack() {
+  if (state.queue.length && state.currentIndex > 0) loadAndPlayIndex(state.currentIndex - 1);
+}
+
+document.getElementById("playPauseButton").addEventListener("click", () => {
+  if (!ytPlayer || !state.playerReady) return;
+  state.isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+});
+document.getElementById("nextButton").addEventListener("click", playNextTrack);
+document.getElementById("previousButton").addEventListener("click", playPrevTrack);
+document.getElementById("shuffleButton").addEventListener("click", (e) => {
+  state.shuffle = !state.shuffle;
+  e.currentTarget.classList.toggle("active", state.shuffle);
+});
+
+window.togglePlaybackMode = function () {
+  state.audioMode = !state.audioMode;
+  document.querySelector(".player-card")?.classList.toggle("audio-mode", state.audioMode);
+  document.getElementById("videoModeButton").textContent = state.audioMode ? "WATCH VIDEO" : "COMPACT VIEW";
+};
+
+function applyZoom() {
+  const frame = document.querySelector("#videoFrame iframe");
+  if (frame) frame.style.transform = `scale(${state.zoom})`;
+}
+document.getElementById("zoomInButton").addEventListener("click", () => {
+  state.zoom = Math.min(1.6, Number((state.zoom + 0.1).toFixed(1)));
+  applyZoom();
+});
+document.getElementById("zoomOutButton").addEventListener("click", () => {
+  state.zoom = Math.max(1, Number((state.zoom - 0.1).toFixed(1)));
+  applyZoom();
+});
+document.getElementById("zoomResetButton").addEventListener("click", () => {
+  state.zoom = 1;
+  applyZoom();
+});
+document.getElementById("fullscreenButton").addEventListener("click", () => {
+  const el = document.getElementById("videoFrame");
+  if (el?.requestFullscreen) el.requestFullscreen().catch(() => {});
+});
+
+async function performSearch() {
+  const q = document.getElementById("searchInput").value.trim();
+  const statusEl = document.getElementById("searchStatus");
+  const resultsEl = document.getElementById("searchResults");
+  if (!q) return;
+
+  statusEl.textContent = "Searching...";
+  resultsEl.innerHTML = "";
+
+  const res = await fetch(`/api/youtube_search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+
+  if (!res.ok) {
+    statusEl.textContent = data.error || "Search failed.";
+    return;
+  }
+
+  const tracks = data.tracks || [];
+  document.getElementById("resultCount").textContent = `${tracks.length} FOUND`;
+  statusEl.textContent = data.cached ? "Loaded from cache (0 extra search quota used)." : "Fresh YouTube API search.";
+
+  tracks.forEach((track) => {
+    const item = document.createElement("div");
+    item.className = "song-item";
+    item.innerHTML = `
+      <img src="${track.thumbnail || ""}" alt="">
+      <div class="song-meta">
+        <div class="song-title">${escapeHtml(track.title)}</div>
+        <div class="song-channel">${escapeHtml(track.artist)}</div>
+      </div>
+      <div class="song-actions">
+        <button type="button" class="q-btn">+ Queue</button>
+        <button type="button" class="primary p-btn">Play</button>
+      </div>
+    `;
+    item.querySelector(".q-btn").addEventListener("click", () => {
+      state.queue.push(track);
+      renderQueue();
+      if (state.currentIndex === -1) loadAndPlayIndex(0);
+    });
+    item.querySelector(".p-btn").addEventListener("click", () => {
+      state.queue.push(track);
+      loadAndPlayIndex(state.queue.length - 1);
+      goToPage("homePage");
+    });
+    resultsEl.appendChild(item);
+  });
+}
+
+document.getElementById("searchButton").addEventListener("click", performSearch);
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") performSearch();
+});
+
+function renderQueue() {
+  const listEl = document.getElementById("queueList");
+  if (!state.queue.length) {
+    listEl.innerHTML = `<p class="status-text">Your queue is empty.</p>`;
+    return;
+  }
+  listEl.innerHTML = state.queue.map((t, i) => `
+    <div class="song-item">
+      <img src="${t.thumbnail || ""}" alt="">
+      <div class="song-meta">
+        <div class="song-title">${i === state.currentIndex ? "▶ " : ""}${escapeHtml(t.title)}</div>
+        <div class="song-channel">${escapeHtml(t.artist)}</div>
+      </div>
+      <div class="song-actions">
+        <button type="button" class="primary" onclick="window.__playQueueIdx(${i})">Play</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+window.__playQueueIdx = (i) => {
+  loadAndPlayIndex(i);
+  goToPage("homePage");
+};
+
+document.getElementById("clearQueueButton").addEventListener("click", () => {
+  state.queue = [];
+  state.currentIndex = -1;
+  renderQueue();
+});
+
+function playlistStorageKey() {
+  return `tanang_playlists_${state.user || "default"}`;
+}
+
+function loadPlaylists() {
+  try {
+    state.playlists = JSON.parse(localStorage.getItem(playlistStorageKey()) || "[]");
+  } catch {
+    state.playlists = [];
+  }
+  renderPlaylists();
+}
+
+function renderPlaylists() {
+  const el = document.getElementById("playlistList");
+  if (!state.playlists.length) {
+    el.innerHTML = `<p class="status-text">No playlists yet. Create one above.</p>`;
+    return;
+  }
+  el.innerHTML = state.playlists.map((pl, idx) => `
+    <div class="song-item">
+      <div class="song-meta">
+        <div class="song-title">${escapeHtml(pl.name)}</div>
+        <div class="song-channel">${pl.tracks.length} tracks</div>
+      </div>
+      <div class="song-actions">
+        <button type="button" onclick="window.__saveQueueToPlaylist(${idx})">Save Queue</button>
+        <button type="button" class="primary" onclick="window.__loadPlaylist(${idx})">Load</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("createPlaylist").addEventListener("click", () => {
+  const input = document.getElementById("playlistName");
+  const name = input.value.trim();
+  if (!name) return;
+  state.playlists.push({ name, tracks: [] });
+  localStorage.setItem(playlistStorageKey(), JSON.stringify(state.playlists));
+  input.value = "";
+  renderPlaylists();
+});
+
+window.__saveQueueToPlaylist = (idx) => {
+  if (!state.playlists[idx]) return;
+  state.playlists[idx].tracks = [...state.queue];
+  localStorage.setItem(playlistStorageKey(), JSON.stringify(state.playlists));
+  renderPlaylists();
+};
+
+window.__loadPlaylist = (idx) => {
+  const pl = state.playlists[idx];
+  if (!pl || !pl.tracks.length) return;
+  state.queue = [...pl.tracks];
+  loadAndPlayIndex(0);
+  goToPage("homePage");
+};
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+renderQueue();
+</script>
 </body>
 </html>

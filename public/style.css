@@ -1,0 +1,400 @@
+const state = {
+  user: null,
+  token: null,
+  queue: [],
+  currentIndex: -1,
+  shuffle: false,
+  zoom: 1,
+  audioMode: false,
+  playlists: [],
+  playerReady: false,
+  isPlaying: false,
+};
+
+let ytPlayer = null;
+let progressTimer = null;
+
+// --- Navigation ---
+function goToPage(pageId) {
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  document.getElementById(pageId)?.classList.add("active");
+
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === pageId);
+  });
+}
+
+document.querySelectorAll("[data-page]").forEach((btn) => {
+  btn.addEventListener("click", () => goToPage(btn.dataset.page));
+});
+
+document.querySelectorAll("[data-go]").forEach((el) => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    goToPage(el.dataset.go);
+  });
+});
+
+// --- Auth / Hash Verification via /api/auth ---
+async function handleAuth(action) {
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authSecret").value;
+  const statusEl = document.getElementById("authStatus");
+  const hashBox = document.getElementById("hashPreviewBox");
+  const hashVal = document.getElementById("hashPreviewValue");
+
+  if (!username || password.length < 8) {
+    statusEl.textContent = "Enter a username and secret of at least 8 characters.";
+    return;
+  }
+
+  statusEl.textContent = "Verifying with server...";
+  const storedHash = sessionStorage.getItem("tanang_test_hash") || "";
+
+  const payload = { action, username, password };
+  if (action === "verify") {
+    payload.password_hash = storedHash;
+  }
+
+  const res = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    statusEl.textContent = data.error || "Authentication failed.";
+    return;
+  }
+
+  if (action === "register") {
+    sessionStorage.setItem("tanang_test_hash", data.password_hash);
+    hashBox.style.display = "block";
+    hashVal.textContent = data.password_hash;
+    statusEl.textContent = "Salted scrypt hash generated! Click 'Verify & Login' to enter.";
+    return;
+  }
+
+  state.user = username;
+  state.token = data.token;
+  document.getElementById("settingsUser").textContent = username;
+  document.getElementById("authGate").classList.add("hidden");
+  loadPlaylists();
+}
+
+document.getElementById("registerHashBtn").addEventListener("click", () => handleAuth("register"));
+document.getElementById("loginHashBtn").addEventListener("click", () => handleAuth("verify"));
+document.getElementById("lockSessionBtn").addEventListener("click", () => {
+  state.token = null;
+  document.getElementById("authGate").classList.remove("hidden");
+  document.getElementById("authStatus").textContent = "Session locked.";
+});
+
+// --- YouTube IFrame Player ---
+window.onYouTubeIframeAPIReady = function () {
+  ytPlayer = new YT.Player("youtubePlayer", {
+    width: "100%",
+    height: "100%",
+    playerVars: { autoplay: 1, controls: 0, playsinline: 1, rel: 0 },
+    events: {
+      onReady: () => {
+        state.playerReady = true;
+        startProgressLoop();
+      },
+      onStateChange: (event) => {
+        if (event.data === YT.PlayerState.PLAYING) {
+          state.isPlaying = true;
+          document.getElementById("playingStatus").textContent = "PLAYING";
+          updateMediaSession();
+        } else if (event.data === YT.PlayerState.PAUSED) {
+          state.isPlaying = false;
+          document.getElementById("playingStatus").textContent = "PAUSED";
+        } else if (event.data === YT.PlayerState.ENDED) {
+          playNextTrack();
+        }
+      },
+    },
+  });
+};
+
+function formatTime(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  const mins = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${mins}:${String(rem).padStart(2, "0")}`;
+}
+
+function startProgressLoop() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    if (!ytPlayer || !state.playerReady || typeof ytPlayer.getCurrentTime !== "function") return;
+    const cur = ytPlayer.getCurrentTime() || 0;
+    const dur = ytPlayer.getDuration() || 0;
+    document.getElementById("currentTime").textContent = formatTime(cur);
+    document.getElementById("totalTime").textContent = formatTime(dur);
+    const seek = document.getElementById("seekBar");
+    if (dur > 0) {
+      seek.value = String(Math.round((cur / dur) * 100));
+    }
+  }, 600);
+}
+
+document.getElementById("seekBar").addEventListener("input", (e) => {
+  if (!ytPlayer || !state.playerReady || typeof ytPlayer.getDuration !== "function") return;
+  const dur = ytPlayer.getDuration() || 0;
+  if (dur > 0) {
+    ytPlayer.seekTo((Number(e.target.value) / 100) * dur, true);
+  }
+});
+
+function loadAndPlayIndex(idx) {
+  if (idx < 0 || idx >= state.queue.length) return;
+  state.currentIndex = idx;
+  const track = state.queue[idx];
+
+  document.getElementById("currentTitle").textContent = track.title;
+  document.getElementById("currentChannel").textContent = track.artist;
+  document.getElementById("videoPlaceholder").classList.add("hidden");
+
+  if (ytPlayer && state.playerReady && typeof ytPlayer.loadVideoById === "function") {
+    ytPlayer.loadVideoById(track.videoId);
+  }
+  updateMediaSession();
+  renderQueue();
+}
+
+function updateMediaSession() {
+  const track = state.queue[state.currentIndex];
+  if (!track || !("mediaSession" in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title,
+    artist: track.artist,
+    artwork: track.thumbnail ? [{ src: track.thumbnail, sizes: "480x360", type: "image/jpeg" }] : [],
+  });
+  navigator.mediaSession.setActionHandler("previoustrack", playPrevTrack);
+  navigator.mediaSession.setActionHandler("nexttrack", playNextTrack);
+}
+
+function playNextTrack() {
+  if (!state.queue.length) return;
+  if (state.shuffle) {
+    const nextIdx = Math.floor(Math.random() * state.queue.length);
+    loadAndPlayIndex(nextIdx);
+  } else if (state.currentIndex + 1 < state.queue.length) {
+    loadAndPlayIndex(state.currentIndex + 1);
+  }
+}
+
+function playPrevTrack() {
+  if (!state.queue.length) return;
+  if (state.currentIndex > 0) {
+    loadAndPlayIndex(state.currentIndex - 1);
+  }
+}
+
+document.getElementById("playPauseButton").addEventListener("click", () => {
+  if (!ytPlayer || !state.playerReady) return;
+  if (state.isPlaying) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
+});
+document.getElementById("nextButton").addEventListener("click", playNextTrack);
+document.getElementById("previousButton").addEventListener("click", playPrevTrack);
+document.getElementById("shuffleButton").addEventListener("click", (e) => {
+  state.shuffle = !state.shuffle;
+  e.currentTarget.classList.toggle("active", state.shuffle);
+});
+
+window.togglePlaybackMode = function () {
+  state.audioMode = !state.audioMode;
+  document.querySelector(".player-card")?.classList.toggle("audio-mode", state.audioMode);
+  document.getElementById("videoModeButton").textContent = state.audioMode ? "WATCH VIDEO" : "COMPACT VIEW";
+};
+
+function applyZoom() {
+  const frame = document.querySelector("#videoFrame iframe");
+  if (frame) frame.style.transform = `scale(${state.zoom})`;
+}
+
+document.getElementById("zoomInButton").addEventListener("click", () => {
+  state.zoom = Math.min(1.6, Number((state.zoom + 0.1).toFixed(1)));
+  applyZoom();
+});
+document.getElementById("zoomOutButton").addEventListener("click", () => {
+  state.zoom = Math.max(1, Number((state.zoom - 0.1).toFixed(1)));
+  applyZoom();
+});
+document.getElementById("zoomResetButton").addEventListener("click", () => {
+  state.zoom = 1;
+  applyZoom();
+});
+
+document.getElementById("fullscreenButton").addEventListener("click", () => {
+  const el = document.getElementById("videoFrame");
+  if (el?.requestFullscreen) el.requestFullscreen().catch(() => {});
+});
+
+// --- Search via /api/youtube_search ---
+async function performSearch() {
+  const q = document.getElementById("searchInput").value.trim();
+  const statusEl = document.getElementById("searchStatus");
+  const resultsEl = document.getElementById("searchResults");
+
+  if (!q) return;
+  statusEl.textContent = "Searching...";
+  resultsEl.innerHTML = "";
+
+  const res = await fetch(`/api/youtube_search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+
+  if (!res.ok) {
+    statusEl.textContent = data.error || "Search failed.";
+    return;
+  }
+
+  const tracks = data.tracks || [];
+  document.getElementById("resultCount").textContent = `${tracks.length} FOUND`;
+  statusEl.textContent = data.cached ? "Loaded from cache (0 extra search quota used)." : "Fresh YouTube API search.";
+
+  tracks.forEach((track) => {
+    const item = document.createElement("div");
+    item.className = "song-item";
+    item.innerHTML = `
+      <img src="${track.thumbnail || ""}" alt="">
+      <div class="song-meta">
+        <div class="song-title">${escapeHtml(track.title)}</div>
+        <div class="song-channel">${escapeHtml(track.artist)}</div>
+      </div>
+      <div class="song-actions">
+        <button type="button" class="q-btn">+ Queue</button>
+        <button type="button" class="primary p-btn">Play</button>
+      </div>
+    `;
+    item.querySelector(".q-btn").addEventListener("click", () => {
+      state.queue.push(track);
+      renderQueue();
+      if (state.currentIndex === -1) loadAndPlayIndex(0);
+    });
+    item.querySelector(".p-btn").addEventListener("click", () => {
+      state.queue.push(track);
+      loadAndPlayIndex(state.queue.length - 1);
+      goToPage("homePage");
+    });
+    resultsEl.appendChild(item);
+  });
+}
+
+document.getElementById("searchButton").addEventListener("click", performSearch);
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") performSearch();
+});
+
+// --- Queue ---
+function renderQueue() {
+  const listEl = document.getElementById("queueList");
+  if (!state.queue.length) {
+    listEl.innerHTML = `<p class="status-text">Your queue is empty.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = state.queue
+    .map(
+      (t, i) => `
+      <div class="song-item">
+        <img src="${t.thumbnail || ""}" alt="">
+        <div class="song-meta">
+          <div class="song-title">${i === state.currentIndex ? "▶ " : ""}${escapeHtml(t.title)}</div>
+          <div class="song-channel">${escapeHtml(t.artist)}</div>
+        </div>
+        <div class="song-actions">
+          <button type="button" class="primary" onclick="window.__playQueueIdx(${i})">Play</button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+window.__playQueueIdx = (i) => {
+  loadAndPlayIndex(i);
+  goToPage("homePage");
+};
+
+document.getElementById("clearQueueButton").addEventListener("click", () => {
+  state.queue = [];
+  state.currentIndex = -1;
+  renderQueue();
+});
+
+// --- Local Playlists (per-user key in localStorage) ---
+function playlistStorageKey() {
+  return `tanang_playlists_${state.user || "default"}`;
+}
+
+function loadPlaylists() {
+  try {
+    state.playlists = JSON.parse(localStorage.getItem(playlistStorageKey()) || "[]");
+  } catch {
+    state.playlists = [];
+  }
+  renderPlaylists();
+}
+
+function renderPlaylists() {
+  const el = document.getElementById("playlistList");
+  if (!state.playlists.length) {
+    el.innerHTML = `<p class="status-text">No playlists yet. Create one above.</p>`;
+    return;
+  }
+  el.innerHTML = state.playlists
+    .map(
+      (pl, idx) => `
+      <div class="song-item">
+        <div class="song-meta">
+          <div class="song-title">${escapeHtml(pl.name)}</div>
+          <div class="song-channel">${pl.tracks.length} tracks</div>
+        </div>
+        <div class="song-actions">
+          <button type="button" onclick="window.__saveQueueToPlaylist(${idx})">Save Queue</button>
+          <button type="button" class="primary" onclick="window.__loadPlaylist(${idx})">Load</button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+document.getElementById("createPlaylist").addEventListener("click", () => {
+  const input = document.getElementById("playlistName");
+  const name = input.value.trim();
+  if (!name) return;
+  state.playlists.push({ name, tracks: [] });
+  localStorage.setItem(playlistStorageKey(), JSON.stringify(state.playlists));
+  input.value = "";
+  renderPlaylists();
+});
+
+window.__saveQueueToPlaylist = (idx) => {
+  if (!state.playlists[idx]) return;
+  state.playlists[idx].tracks = [...state.queue];
+  localStorage.setItem(playlistStorageKey(), JSON.stringify(state.playlists));
+  renderPlaylists();
+};
+
+window.__loadPlaylist = (idx) => {
+  const pl = state.playlists[idx];
+  if (!pl || !pl.tracks.length) return;
+  state.queue = [...pl.tracks];
+  loadAndPlayIndex(0);
+  goToPage("homePage");
+};
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+renderQueue();

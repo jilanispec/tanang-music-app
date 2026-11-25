@@ -20,39 +20,22 @@ MEMORY_DB: dict[str, str] = {}
 IST = timezone(timedelta(hours=5, minutes=30))
 
 DEFAULT_CONFIG = {
-    "version": "v2.2",
-    "published_at": "Nov 25, 2026 · 05:50 PM IST",
-    "announcement_title": "Welcome to TANANG MUSIC 2.2",
-    "announcement_body": "Explore personalized playlists, movie hits, and Spotify/YouTube playlist imports.",
+    "version": "v2.3",
+    "published_at": "Nov 25, 2026 · 06:35 PM IST",
+    "announcement_title": "Welcome to TANANG MUSIC 2.3",
+    "announcement_body": "Full playlist imports, 16:9 banners, and background playback enabled.",
+    "show_ads": True,
     "slides": [
         {
-            "title": "Telugu Mass & Melody Mix",
-            "subtitle": "Non-stop chartbusters curated for you",
+            "title": "TANANG MUSIC",
             "image": "",
-            "query": "Telugu latest hit songs",
+            "ad_url": "",
             "is_ad": False,
-        },
-        {
-            "title": "Devara & Mass Hero Jukeboxes",
-            "subtitle": "Tap to play full movie audio albums",
-            "image": "",
-            "query": "Devara movie songs",
-            "is_ad": False,
-        },
-        {
-            "title": "TANANG MUSIC Pro Experience",
-            "subtitle": "Ad-supported free streaming · Custom playlists",
-            "image": "",
-            "query": "Anirudh Ravichander hits",
-            "is_ad": True,
-        },
+        }
     ],
 }
 
 
-# ---------------------------------------------------------------------------
-# Upstash Redis / Vercel KV REST Helper
-# ---------------------------------------------------------------------------
 def _kv_headers():
     token = (
         os.environ.get("KV_REST_API_TOKEN")
@@ -103,9 +86,6 @@ def kv_set(key: str, value) -> bool:
     return True
 
 
-# ---------------------------------------------------------------------------
-# Password Hashing & Session Signing
-# ---------------------------------------------------------------------------
 def hash_password(password: str) -> str:
     if not isinstance(password, str) or len(password) < 6:
         raise ValueError("Password must be at least 6 characters.")
@@ -144,9 +124,6 @@ def sign_session_token(username: str, secret: str) -> str:
     return f"{username}:{nonce}:{sig}"
 
 
-# ---------------------------------------------------------------------------
-# Core App Routes
-# ---------------------------------------------------------------------------
 @app.route("/", methods=["GET"])
 def serve_home():
     return send_from_directory(PUBLIC_DIR, "index.html")
@@ -245,7 +222,7 @@ def user_data():
         "liked": data.get("liked", []),
         "favorites": data.get("favorites", []),
         "playlists": data.get("playlists", []),
-        "recent_queries": data.get("recent_queries", [])[:8],
+        "recent_queries": data.get("recent_queries", [])[:10],
     }
     kv_set(f"tanang:lib:{username}", library)
     return jsonify({"saved": True}), 200
@@ -282,29 +259,29 @@ def app_config():
     current = kv_get("tanang:app_config") or dict(DEFAULT_CONFIG)
     now_str = datetime.now(IST).strftime("%b %d, %Y · %I:%M %p IST")
 
-    current["version"] = (data.get("version") or current.get("version", "v2.2")).strip()
+    current["version"] = (data.get("version") or current.get("version", "v2.3")).strip()
     current["published_at"] = now_str
     current["announcement_title"] = (data.get("announcement_title") or current.get("announcement_title", "")).strip()
     current["announcement_body"] = (data.get("announcement_body") or current.get("announcement_body", "")).strip()
+    current["show_ads"] = bool(data.get("show_ads", True))
 
     if isinstance(data.get("slides"), list):
         clean_slides = []
         for s in data["slides"]:
             if not isinstance(s, dict):
                 continue
-            title = (s.get("title") or "").strip()
             image = (s.get("image") or "").strip()
-            if not title and not image:
+            title = (s.get("title") or "").strip()
+            ad_url = (s.get("ad_url") or "").strip()
+            if not image and not title:
                 continue
             clean_slides.append({
-                "title": title or "Featured Mix",
-                "subtitle": (s.get("subtitle") or "").strip(),
+                "title": title,
                 "image": image,
-                "query": (s.get("query") or title or "Telugu hit songs").strip(),
-                "is_ad": bool(s.get("is_ad")),
+                "ad_url": ad_url,
+                "is_ad": bool(s.get("is_ad", True)),
             })
-        if clean_slides:
-            current["slides"] = clean_slides
+        current["slides"] = clean_slides
 
     kv_set("tanang:app_config", current)
     return jsonify({"updated": True, "config": current}), 200
@@ -350,7 +327,7 @@ def _yt_search_videos(query: str, api_key: str, max_results: int = 10) -> list[d
     return tracks
 
 
-def _yt_search_playlists(query: str, api_key: str, max_results: int = 6) -> list[dict]:
+def _yt_search_playlists(query: str, api_key: str, max_results: int = 8) -> list[dict]:
     pl_cache = f"pl:{max_results}:{query.lower()}"
     if pl_cache in SEARCH_CACHE:
         return SEARCH_CACHE[pl_cache]
@@ -389,6 +366,67 @@ def _yt_search_playlists(query: str, api_key: str, max_results: int = 6) -> list
     return playlists
 
 
+def _fetch_full_youtube_playlist(playlist_id: str, api_key: str, max_tracks: int = 150) -> tuple[str, list[dict]]:
+    """Fetch exact YouTube playlist title and paginate through all playlist items."""
+    pl_title = ""
+    try:
+        meta_resp = requests.get(
+            "https://www.googleapis.com/youtube/v3/playlists",
+            params={"part": "snippet", "id": playlist_id, "key": api_key},
+            timeout=8,
+        )
+        if meta_resp.status_code == 200:
+            items = meta_resp.json().get("items", [])
+            if items:
+                pl_title = (items[0].get("snippet", {}).get("title") or "").strip()
+    except Exception:
+        pass
+
+    tracks: list[dict] = []
+    page_token = None
+    while len(tracks) < max_tracks:
+        params = {
+            "part": "snippet",
+            "maxResults": 50,
+            "playlistId": playlist_id,
+            "key": api_key,
+        }
+        if page_token:
+            params["pageToken"] = page_token
+
+        resp = requests.get(
+            "https://www.googleapis.com/youtube/v3/playlistItems",
+            params=params,
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            break
+
+        payload = resp.json()
+        for item in payload.get("items", []):
+            snip = item.get("snippet", {})
+            vid = snip.get("resourceId", {}).get("videoId")
+            title = snip.get("title", "")
+            if not vid or title in ("Deleted video", "Private video"):
+                continue
+            tracks.append({
+                "videoId": vid,
+                "title": title,
+                "artist": snip.get("videoOwnerChannelTitle") or snip.get("channelTitle", ""),
+                "thumbnail": (
+                    snip.get("thumbnails", {}).get("high", {}).get("url")
+                    or snip.get("thumbnails", {}).get("default", {}).get("url")
+                ),
+                "kind": "song",
+            })
+
+        page_token = payload.get("nextPageToken")
+        if not page_token:
+            break
+
+    return pl_title or "YouTube Playlist", tracks
+
+
 @app.route("/api/youtube_search", methods=["GET"])
 def youtube_search():
     raw_q = (request.args.get("q") or "").strip()
@@ -415,7 +453,6 @@ def youtube_search():
 
     tracks = _yt_search_videos(search_q, api_key, max_results=10)
 
-    # Mix matching playlists into "All" results so users see square playlist cards
     if filter_type == "all":
         matching_playlists = _yt_search_playlists(raw_q, api_key, max_results=3)
         combined = []
@@ -433,7 +470,7 @@ def recommendations():
     api_key = os.environ.get("YOUTUBE_API_KEY")
     if not api_key:
         return jsonify({"playlists": []}), 200
-    playlists = _yt_search_playlists(seed, api_key, max_results=6)
+    playlists = _yt_search_playlists(seed, api_key, max_results=8)
     return jsonify({"playlists": playlists}), 200
 
 
@@ -451,43 +488,16 @@ def playlist_tracks():
     if cache_key in SEARCH_CACHE:
         return jsonify({"tracks": SEARCH_CACHE[cache_key]}), 200
 
-    resp = requests.get(
-        "https://www.googleapis.com/youtube/v3/playlistItems",
-        params={
-            "part": "snippet",
-            "maxResults": 25,
-            "playlistId": playlist_id,
-            "key": api_key,
-        },
-        timeout=10,
-    )
-    if resp.status_code != 200:
-        return jsonify({"error": "Could not load playlist tracks"}), resp.status_code
+    _, tracks = _fetch_full_youtube_playlist(playlist_id, api_key, max_tracks=150)
+    if not tracks:
+        return jsonify({"error": "Could not load playlist tracks"}), 400
 
-    tracks = []
-    for item in resp.json().get("items", []):
-        snip = item.get("snippet", {})
-        vid = snip.get("resourceId", {}).get("videoId")
-        if not vid:
-            continue
-        tracks.append({
-            "videoId": vid,
-            "title": snip.get("title", ""),
-            "artist": snip.get("videoOwnerChannelTitle") or snip.get("channelTitle", ""),
-            "thumbnail": (
-                snip.get("thumbnails", {}).get("high", {}).get("url")
-                or snip.get("thumbnails", {}).get("default", {}).get("url")
-            ),
-            "kind": "song",
-        })
     SEARCH_CACHE[cache_key] = tracks
     return jsonify({"tracks": tracks}), 200
 
 
 def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
-    """Extract playlist title and actual track + artist queries from Spotify embed JSON."""
     parsed = urlparse(spotify_url)
-    # Match /playlist/<id> or /album/<id> (including regional paths like /intl-en/playlist/<id>)
     match = re.search(r"/(playlist|album)/([a-zA-Z0-9]+)", parsed.path)
     if not match:
         raise ValueError("Invalid Spotify playlist or album URL")
@@ -502,10 +512,9 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
     resp = requests.get(embed_url, headers=headers, timeout=10)
     html = resp.text
 
-    playlist_title = f"Spotify {kind.title()}"
+    playlist_title = ""
     queries: list[str] = []
 
-    # Parse __NEXT_DATA__ JSON inside Spotify's embed page
     next_data_match = re.search(
         r'<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)</script>',
         html,
@@ -521,10 +530,7 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
                 .get("data", {})
                 .get("entity", {})
             )
-            if entity.get("name"):
-                playlist_title = entity["name"]
-            elif entity.get("title"):
-                playlist_title = entity["title"]
+            playlist_title = (entity.get("name") or entity.get("title") or "").strip()
 
             track_list = entity.get("trackList") or []
             for entry in track_list:
@@ -535,7 +541,18 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
         except Exception:
             pass
 
-    # Fallback regex on trackList JSON if __NEXT_DATA__ structure varies
+    if not playlist_title:
+        try:
+            oembed = requests.get(
+                "https://open.spotify.com/oembed",
+                params={"url": f"https://open.spotify.com/{kind}/{item_id}"},
+                timeout=6,
+            )
+            if oembed.status_code == 200:
+                playlist_title = (oembed.json().get("title") or "").strip()
+        except Exception:
+            pass
+
     if not queries:
         pair_matches = re.findall(
             r'"title":"([^"]{2,100})","subtitle":"([^"]{1,100})"',
@@ -547,7 +564,6 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
             if clean_title and clean_title.lower() != playlist_title.lower():
                 queries.append(f"{clean_title} {clean_sub}".strip())
 
-    # Deduplicate while preserving exact playlist order
     seen = set()
     unique_queries = []
     for q in queries:
@@ -556,7 +572,7 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
             seen.add(key)
             unique_queries.append(q)
 
-    return playlist_title, unique_queries
+    return playlist_title or f"Spotify {kind.title()}", unique_queries
 
 
 @app.route("/api/import_playlist", methods=["POST", "OPTIONS"])
@@ -578,47 +594,23 @@ def import_playlist():
     parsed = urlparse(raw_url)
     host = parsed.netloc.lower()
 
-    # 1. YouTube Playlist URL
+    # 1. YouTube Playlist URL — fetch full playlist title & all tracks
     if "youtube.com" in host or "youtu.be" in host:
         qs = parse_qs(parsed.query)
         pl_id = (qs.get("list") or [None])[0]
         if not pl_id:
             return jsonify({"error": "Invalid YouTube playlist URL (missing list= ID)"}), 400
 
-        resp = requests.get(
-            "https://www.googleapis.com/youtube/v3/playlistItems",
-            params={
-                "part": "snippet",
-                "maxResults": 25,
-                "playlistId": pl_id,
-                "key": api_key,
-            },
-            timeout=10,
-        )
-        if resp.status_code != 200:
+        yt_title, tracks = _fetch_full_youtube_playlist(pl_id, api_key, max_tracks=150)
+        if not tracks:
             return jsonify({"error": "Could not fetch YouTube playlist (make sure it is Public)"}), 400
 
-        tracks = []
-        for item in resp.json().get("items", []):
-            snip = item.get("snippet", {})
-            vid = snip.get("resourceId", {}).get("videoId")
-            if not vid:
-                continue
-            tracks.append({
-                "videoId": vid,
-                "title": snip.get("title", ""),
-                "artist": snip.get("videoOwnerChannelTitle") or snip.get("channelTitle", ""),
-                "thumbnail": (
-                    snip.get("thumbnails", {}).get("high", {}).get("url")
-                    or snip.get("thumbnails", {}).get("default", {}).get("url")
-                ),
-            })
         return jsonify({
-            "name": custom_name or "Imported YouTube Playlist",
+            "name": custom_name or yt_title,
             "tracks": tracks,
         }), 200
 
-    # 2. Spotify Playlist / Album URL
+    # 2. Spotify Playlist / Album URL — fetch all tracks & exact Spotify title
     if "spotify.com" in host:
         try:
             sp_title, track_queries = _extract_spotify_tracks(raw_url)
@@ -626,7 +618,7 @@ def import_playlist():
                 return jsonify({"error": "Could not read songs from that Spotify link (ensure playlist is Public)"}), 400
 
             tracks = []
-            for t_query in track_queries[:15]:
+            for t_query in track_queries[:80]:
                 matches = _yt_search_videos(f"{t_query} audio song", api_key, max_results=1)
                 if matches:
                     tracks.append(matches[0])

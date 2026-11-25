@@ -2,29 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#090909">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="/icon-512.png">
+  <link rel="apple-touch-icon" href="/icon-512.png">
+  <link rel="manifest" href="/manifest.json">
   <title>TANANG MUSIC</title>
   <style>
     :root {
       --bg: #090909;
-      --surface: #121316;
-      --surface-2: #191b20;
-      --border: #252830;
-      --text: #f5f5f5;
-      --muted: #9ca3af;
-      --accent: #22c55e;
-      --accent-soft: rgba(34, 197, 94, 0.14);
+      --surface: #121214;
+      --surface-2: #1a1a1e;
+      --border: #27272c;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #facc15;
+      --accent-dark: #eab308;
+      --accent-soft: rgba(250, 204, 21, 0.14);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     html, body {
       margin: 0;
       padding: 0;
-      background: var(--bg);
+      background: #000000;
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overscroll-behavior-y: contain;
+    }
+
+    /* Strict Mobile App Shell */
+    .mobile-shell {
+      width: 100%;
+      max-width: 460px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background: var(--bg);
+      position: relative;
+      border-left: 1px solid #18181b;
+      border-right: 1px solid #18181b;
+      overflow-x: hidden;
     }
 
     svg {
@@ -37,49 +60,82 @@
       stroke-linejoin: round;
     }
 
+    /* Logo Styling */
+    .logo-circle {
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      border: 1.5px solid rgba(250, 204, 21, 0.45);
+      background: #facc15;
+    }
+    .logo-circle.sm { width: 34px; height: 34px; }
+    .logo-circle.lg { width: 82px; height: 82px; margin: 0 auto 12px; box-shadow: 0 6px 24px rgba(250, 204, 21, 0.25); }
+
+    /* Clean Normal Login / Register Gate */
     .auth-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(9, 9, 9, 0.97);
+      max-width: 460px;
+      margin: 0 auto;
+      background: rgba(9, 9, 9, 0.98);
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 18px;
+      padding: 20px;
     }
     .auth-overlay.hidden { display: none; }
 
     .auth-box {
       width: 100%;
-      max-width: 420px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 20px;
+      padding: 24px 20px;
+      text-align: center;
     }
-    .auth-box h2 { margin: 0 0 6px; font-size: 1.2rem; }
-    .auth-sub { margin: 0 0 14px; color: var(--muted); font-size: 0.88rem; }
+    .auth-brand-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      margin: 0 0 4px;
+    }
+    .auth-brand-title span { color: var(--accent); }
+    .auth-sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
 
     .auth-box input {
       width: 100%;
       background: var(--bg);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 11px 12px;
-      margin-bottom: 10px;
-      font-size: 0.95rem;
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin-bottom: 12px;
+      font-size: 0.96rem;
+      outline: none;
+    }
+    .auth-box input:focus {
+      border-color: var(--accent);
     }
 
-    .auth-actions { display: flex; gap: 8px; }
+    .auth-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
     .auth-actions button {
-      flex: 1;
-      padding: 11px 12px;
-      border-radius: 10px;
+      padding: 13px 12px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--accent);
-      color: #051109;
-      font-weight: 700;
+      color: #090909;
+      font-weight: 800;
+      font-size: 0.92rem;
       cursor: pointer;
     }
     .auth-actions .ghost-btn {
@@ -87,18 +143,14 @@
       color: var(--text);
     }
 
-    .hash-box {
-      margin-top: 12px;
-      padding: 10px;
-      background: var(--bg);
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      font-size: 0.78rem;
+    .auth-status {
+      margin: 14px 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+      min-height: 1.2em;
     }
-    .hash-box span { display: block; color: var(--muted); margin-bottom: 4px; }
-    .hash-box code { word-break: break-all; color: #86efac; }
-    .auth-status { margin: 10px 0 0; font-size: 0.84rem; color: var(--muted); }
 
+    /* Top Bar */
     .topbar {
       position: sticky;
       top: 0;
@@ -107,7 +159,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      background: rgba(9, 9, 9, 0.92);
+      background: rgba(9, 9, 9, 0.94);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
     }
@@ -115,43 +167,28 @@
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       color: var(--text);
       text-decoration: none;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      font-size: 1rem;
-    }
-    .brand b { color: var(--accent); font-weight: 800; }
-
-    .brand-mark {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #22c55e, #15803d);
-      color: #051109;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
       font-weight: 900;
-      font-size: 1rem;
-      box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+      letter-spacing: 0.06em;
+      font-size: 0.98rem;
     }
+    .brand b { color: var(--accent); font-weight: 900; }
 
     .room-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-size: 0.7rem;
+      font-weight: 800;
       padding: 5px 10px;
       border-radius: 999px;
       background: var(--accent-soft);
       color: var(--accent);
-      border: 1px solid rgba(34, 197, 94, 0.3);
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      letter-spacing: 0.06em;
     }
 
     .app-main {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 18px 16px 96px;
+      padding: 16px 16px 96px;
     }
 
     .page { display: none; }
@@ -159,34 +196,35 @@
 
     .eyebrow {
       margin: 0 0 4px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       letter-spacing: 0.12em;
       color: var(--accent);
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    h1 { margin: 0 0 6px; font-size: 1.75rem; }
+    h1 { margin: 0 0 4px; font-size: 1.65rem; }
     h1 span { color: var(--accent); }
-    .welcome p { margin: 0; color: var(--muted); }
+    .welcome p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
     .section-heading, .results-heading {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 20px 0 10px;
+      margin: 18px 0 10px;
     }
     .section-heading h2, .results-heading h2 {
       margin: 0;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       letter-spacing: 0.08em;
       color: var(--muted);
     }
-    .playing-status { font-size: 0.75rem; font-weight: 700; color: var(--accent); }
+    .playing-status { font-size: 0.74rem; font-weight: 800; color: var(--accent); }
 
+    /* Player Card */
     .player-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px;
     }
 
@@ -218,20 +256,20 @@
       justify-content: center;
       gap: 6px;
       color: var(--muted);
-      background: #0b0c0e;
+      background: #0b0b0d;
       pointer-events: none;
     }
     .video-placeholder.hidden { display: none; }
 
     .track-info { margin: 12px 0 8px; }
-    .track-info h2 { margin: 0; font-size: 1.05rem; }
-    .track-info p { margin: 3px 0 0; font-size: 0.86rem; color: var(--muted); }
+    .track-info h2 { margin: 0; font-size: 1.02rem; }
+    .track-info p { margin: 3px 0 0; font-size: 0.84rem; color: var(--muted); }
 
     .progress-area {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--muted);
       margin: 10px 0;
     }
@@ -263,24 +301,25 @@
       background: var(--accent-soft);
     }
     .icon-button.main-play {
-      width: 54px;
-      height: 54px;
+      width: 56px;
+      height: 56px;
       border-radius: 999px;
       background: var(--accent);
-      color: #051109;
+      color: #090909;
       border: none;
+      box-shadow: 0 4px 16px rgba(250, 204, 21, 0.35);
     }
     .icon-button.main-play svg { fill: currentColor; stroke: none; }
 
     .video-mode-button {
       width: 100%;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 11px;
+      border-radius: 11px;
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
-      font-weight: 700;
-      font-size: 0.8rem;
+      font-weight: 800;
+      font-size: 0.78rem;
       letter-spacing: 0.06em;
       cursor: pointer;
     }
@@ -290,7 +329,7 @@
       align-items: center;
       justify-content: space-between;
       margin-top: 10px;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--muted);
     }
     .zoom-controls > div { display: flex; gap: 6px; }
@@ -304,7 +343,7 @@
       cursor: pointer;
     }
 
-    .home-actions { display: grid; gap: 10px; margin-top: 16px; }
+    .home-actions { display: grid; gap: 10px; margin-top: 14px; }
     .feature-card {
       width: 100%;
       display: flex;
@@ -328,10 +367,11 @@
       align-items: center;
       justify-content: center;
     }
-    .feature-card b { display: block; font-size: 0.95rem; }
-    .feature-card small { color: var(--muted); font-size: 0.8rem; }
+    .feature-card b { display: block; font-size: 0.94rem; }
+    .feature-card small { color: var(--muted); font-size: 0.78rem; }
     .feature-arrow { margin-left: auto; font-size: 1.3rem; color: var(--muted); }
 
+    /* Search & Lists */
     .search-box, .create-playlist-box {
       display: flex;
       align-items: center;
@@ -356,22 +396,22 @@
       border-radius: 9px;
       border: none;
       background: var(--accent);
-      color: #051109;
+      color: #090909;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
     }
 
-    .status-text { color: var(--muted); font-size: 0.85rem; }
+    .status-text { color: var(--muted); font-size: 0.84rem; }
     .text-button {
       background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.72rem;
-      font-weight: 700;
+      padding: 7px 11px;
+      font-size: 0.74rem;
+      font-weight: 800;
       cursor: pointer;
     }
 
@@ -386,21 +426,21 @@
       border: 1px solid var(--border);
     }
     .song-item img {
-      width: 58px;
-      height: 44px;
+      width: 56px;
+      height: 42px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 7px;
       flex-shrink: 0;
     }
     .song-meta { flex: 1; min-width: 0; }
     .song-title {
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.88rem;
+      font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .song-channel { font-size: 0.78rem; color: var(--muted); }
+    .song-channel { font-size: 0.76rem; color: var(--muted); }
     .song-actions { display: flex; gap: 6px; }
     .song-actions button {
       padding: 6px 10px;
@@ -408,21 +448,22 @@
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.74rem;
+      font-weight: 700;
       cursor: pointer;
     }
     .song-actions button.primary {
       background: var(--accent);
-      color: #051109;
+      color: #090909;
       border: none;
-      font-weight: 700;
+      font-weight: 800;
     }
 
+    /* Settings */
     .settings-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 16px;
       margin-bottom: 12px;
     }
@@ -438,27 +479,30 @@
       margin-bottom: 10px;
     }
     .settings-card h2 { margin: 0 0 4px; font-size: 1rem; }
-    .settings-card p { margin: 0 0 10px; color: var(--muted); font-size: 0.88rem; }
+    .settings-card p { margin: 0 0 10px; color: var(--muted); font-size: 0.86rem; }
     .settings-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
+      padding: 9px 0;
       border-top: 1px solid var(--border);
-      font-size: 0.86rem;
+      font-size: 0.85rem;
     }
 
+    /* Bottom Mobile Nav */
     .bottom-nav {
       position: fixed;
-      left: 0;
-      right: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 460px;
       bottom: 0;
       z-index: 30;
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      background: rgba(12, 13, 16, 0.96);
+      background: rgba(12, 12, 14, 0.97);
       backdrop-filter: blur(10px);
       border-top: 1px solid var(--border);
-      padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+      padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
     }
     .nav-item {
       background: transparent;
@@ -468,238 +512,241 @@
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 6px 2px;
+      font-size: 0.64rem;
+      font-weight: 800;
+      padding: 5px 2px;
       cursor: pointer;
     }
     .nav-item.active { color: var(--accent); }
   </style>
 </head>
 <body>
+<div class="mobile-shell">
 
-<div class="auth-overlay" id="authGate">
-  <div class="auth-box">
-    <div class="brand" style="margin-bottom: 14px;">
-      <span class="brand-mark">T</span>
-      <span>TANANG <b>MUSIC</b></span>
+  <!-- Clean Normal Login & Register Overlay (No Hash Displayed) -->
+  <div class="auth-overlay" id="authGate">
+    <div class="auth-box">
+      <img src="/logo-circle.png" alt="TANANG MUSIC" class="logo-circle lg" onerror="this.style.display='none'">
+      <h2 class="auth-brand-title">TANANG <span>MUSIC</span></h2>
+      <p class="auth-sub">Sign in or register to open your music space.</p>
+
+      <input id="authUsername" type="text" placeholder="Username" autocomplete="username">
+      <input id="authSecret" type="password" placeholder="Password" autocomplete="current-password">
+
+      <div class="auth-actions">
+        <button type="button" id="loginBtn">Login</button>
+        <button type="button" id="registerBtn" class="ghost-btn">Register</button>
+      </div>
+
+      <p class="auth-status" id="authStatus"></p>
     </div>
-    <h2>Secure Access</h2>
-    <p class="auth-sub">Enter a username and password or hash-string secret (8+ chars).</p>
-
-    <input id="authUsername" type="text" placeholder="Username (e.g. jilan_9999)" autocomplete="username">
-    <input id="authSecret" type="password" placeholder="Password or hash secret (8+ chars)" autocomplete="current-password">
-
-    <div class="auth-actions">
-      <button type="button" id="registerHashBtn">Create Hash &amp; Enter</button>
-      <button type="button" id="loginHashBtn" class="ghost-btn">Verify &amp; Login</button>
-    </div>
-
-    <div class="hash-box" id="hashPreviewBox" style="display: none;">
-      <span>Generated Salted Hash:</span>
-      <code id="hashPreviewValue"></code>
-    </div>
-
-    <p class="auth-status" id="authStatus">Ready. Credentials are hashed with scrypt on the server.</p>
   </div>
-</div>
 
-<header class="topbar">
-  <a class="brand" href="#" aria-label="Tanang Music home" data-go="homePage">
-    <span class="brand-mark">T</span>
-    <span>TANANG <b>MUSIC</b></span>
-  </a>
-  <div class="room-badge" id="roomBadge">PERSONAL</div>
-</header>
+  <!-- Top Header -->
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Tanang Music home" data-go="homePage">
+      <img src="/logo-circle.png" alt="" class="logo-circle sm" onerror="this.style.display='none'">
+      <span>TANANG <b>MUSIC</b></span>
+    </a>
+    <div class="room-badge" id="roomBadge">PERSONAL</div>
+  </header>
 
-<main class="app-main">
-  <section class="page active" id="homePage">
-    <div class="welcome">
-      <p class="eyebrow">YOUR MUSIC SPACE</p>
-      <h1>Feel the <span>music.</span></h1>
-      <p>Your music, your vibe.</p>
-    </div>
+  <main class="app-main">
+    <!-- HOME PAGE -->
+    <section class="page active" id="homePage">
+      <div class="welcome">
+        <p class="eyebrow">YOUR MUSIC SPACE</p>
+        <h1>Feel the <span>music.</span></h1>
+        <p>Your music, your vibe.</p>
+      </div>
 
-    <div class="section-heading">
-      <h2>NOW PLAYING</h2>
-      <span class="playing-status" id="playingStatus">READY</span>
-    </div>
+      <div class="section-heading">
+        <h2>NOW PLAYING</h2>
+        <span class="playing-status" id="playingStatus">READY</span>
+      </div>
 
-    <div class="player-card">
-      <div class="video-frame" id="videoFrame">
-        <div id="youtubePlayer"></div>
-        <div class="video-placeholder" id="videoPlaceholder">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-          <span>Nothing playing</span>
+      <div class="player-card">
+        <div class="video-frame" id="videoFrame">
+          <div id="youtubePlayer"></div>
+          <div class="video-placeholder" id="videoPlaceholder">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <span>Nothing playing</span>
+          </div>
+        </div>
+
+        <div class="track-info">
+          <h2 id="currentTitle">Choose a song</h2>
+          <p id="currentChannel">Search to start listening</p>
+        </div>
+
+        <div class="progress-area">
+          <span id="currentTime">0:00</span>
+          <input id="seekBar" type="range" min="0" max="100" value="0">
+          <span id="totalTime">0:00</span>
+        </div>
+
+        <div class="player-controls">
+          <button class="icon-button" id="shuffleButton" aria-label="Shuffle" title="Shuffle">
+            <svg viewBox="0 0 24 24"><path d="m18 14 4 4-4 4M18 2l4 4-4 4M2 18h2.5a6 6 0 0 0 4.8-2.4l5.4-7.2A6 6 0 0 1 19.5 6H22M2 6h2.5a6 6 0 0 1 4.8 2.4l.7.9M14 15.5l.7.9a6 6 0 0 0 4.8 2.6H22"/></svg>
+          </button>
+
+          <button class="icon-button" id="previousButton" aria-label="Previous" title="Previous">
+            <svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8v16ZM5 19V5"/></svg>
+          </button>
+
+          <button class="icon-button main-play" id="playPauseButton" aria-label="Play or pause" title="Play or pause">
+            <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg>
+          </button>
+
+          <button class="icon-button" id="nextButton" aria-label="Next" title="Next">
+            <svg viewBox="0 0 24 24"><path d="m5 4 10 8-10 8V4ZM19 5v14"/></svg>
+          </button>
+
+          <button class="icon-button" id="fullscreenButton" aria-label="Full screen" title="Full screen">
+            <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
+          </button>
+        </div>
+
+        <button class="video-mode-button" id="videoModeButton" type="button" onclick="togglePlaybackMode()">
+          COMPACT VIEW
+        </button>
+
+        <div class="zoom-controls">
+          <span>VIDEO ZOOM</span>
+          <div>
+            <button id="zoomOutButton" class="small-icon" aria-label="Zoom out">−</button>
+            <button id="zoomResetButton" class="small-icon" aria-label="Reset zoom">1:1</button>
+            <button id="zoomInButton" class="small-icon" aria-label="Zoom in">+</button>
+          </div>
         </div>
       </div>
 
-      <div class="track-info">
-        <h2 id="currentTitle">Choose a song</h2>
-        <p id="currentChannel">Search to start listening</p>
-      </div>
-
-      <div class="progress-area">
-        <span id="currentTime">0:00</span>
-        <input id="seekBar" type="range" min="0" max="100" value="0">
-        <span id="totalTime">0:00</span>
-      </div>
-
-      <div class="player-controls">
-        <button class="icon-button" id="shuffleButton" aria-label="Shuffle" title="Shuffle">
-          <svg viewBox="0 0 24 24"><path d="m18 14 4 4-4 4M18 2l4 4-4 4M2 18h2.5a6 6 0 0 0 4.8-2.4l5.4-7.2A6 6 0 0 1 19.5 6H22M2 6h2.5a6 6 0 0 1 4.8 2.4l.7.9M14 15.5l.7.9a6 6 0 0 0 4.8 2.6H22"/></svg>
+      <div class="home-actions">
+        <button class="feature-card" data-go="searchPage">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          </span>
+          <span><b>Discover music</b><small>Find your next favourite</small></span>
+          <span class="feature-arrow">›</span>
         </button>
 
-        <button class="icon-button" id="previousButton" aria-label="Previous" title="Previous">
-          <svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8v16ZM5 19V5"/></svg>
-        </button>
-
-        <button class="icon-button main-play" id="playPauseButton" aria-label="Play or pause" title="Play or pause">
-          <svg id="playPauseIcon" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg>
-        </button>
-
-        <button class="icon-button" id="nextButton" aria-label="Next" title="Next">
-          <svg viewBox="0 0 24 24"><path d="m5 4 10 8-10 8V4ZM19 5v14"/></svg>
-        </button>
-
-        <button class="icon-button" id="fullscreenButton" aria-label="Full screen" title="Full screen">
-          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
+        <button class="feature-card" data-go="queuePage">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </span>
+          <span><b>Your queue</b><small>Manage upcoming songs</small></span>
+          <span class="feature-arrow">›</span>
         </button>
       </div>
+    </section>
 
-      <button class="video-mode-button" id="videoModeButton" type="button" onclick="togglePlaybackMode()">
-        WATCH VIDEO
-      </button>
+    <!-- SEARCH PAGE -->
+    <section class="page" id="searchPage">
+      <div class="page-heading">
+        <p class="eyebrow">FIND YOUR SOUND</p>
+        <h1>Discover <span>music.</span></h1>
+      </div>
 
-      <div class="zoom-controls">
-        <span>VIDEO ZOOM</span>
-        <div>
-          <button id="zoomOutButton" class="small-icon" aria-label="Zoom out">−</button>
-          <button id="zoomResetButton" class="small-icon" aria-label="Reset zoom">1:1</button>
-          <button id="zoomInButton" class="small-icon" aria-label="Zoom in">+</button>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="searchInput" type="search" placeholder="Songs, artists, albums..." autocomplete="off">
+        <button id="searchButton" aria-label="Search">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="results-heading">
+        <h2>SEARCH RESULTS</h2>
+        <span id="resultCount" class="status-text">UP TO 8</span>
+      </div>
+
+      <p id="searchStatus" class="status-text">Search for a song or artist.</p>
+      <div id="searchResults" class="song-list"></div>
+    </section>
+
+    <!-- QUEUE PAGE -->
+    <section class="page" id="queuePage">
+      <div class="page-heading">
+        <p class="eyebrow">UP NEXT</p>
+        <h1>Your <span>queue.</span></h1>
+      </div>
+
+      <div class="results-heading">
+        <h2>UPCOMING SONGS</h2>
+        <button id="clearQueueButton" class="text-button">CLEAR ALL</button>
+      </div>
+
+      <div id="queueList" class="song-list"></div>
+    </section>
+
+    <!-- PLAYLISTS PAGE -->
+    <section class="page" id="playlistsPage">
+      <div class="page-heading">
+        <p class="eyebrow">YOUR COLLECTION</p>
+        <h1>Your <span>playlists.</span></h1>
+      </div>
+
+      <div class="create-playlist-box">
+        <input id="playlistName" type="text" placeholder="Name your playlist" maxlength="50">
+        <button id="createPlaylist" aria-label="Create playlist">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <div id="playlistList" class="song-list" style="margin-top: 12px;"></div>
+    </section>
+
+    <!-- SETTINGS PAGE -->
+    <section class="page" id="settingsPage">
+      <div class="page-heading">
+        <p class="eyebrow">PERSONALISE</p>
+        <h1>Settings<span>.</span></h1>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 0 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 0 1 0-4h.2a2 2 0 0 0 1.4-3.4l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 0 1 4 0v.2a2 2 0 0 0 1.4 1.4l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 0 1 0 4h-.2a2 2 0 0 0-1.4 3.4Z"/></svg>
         </div>
+        <h2>TANANG MUSIC</h2>
+        <p>Personal music space.</p>
+        <div class="settings-row"><span>User</span><b id="settingsUser">Not logged in</b></div>
+        <div class="settings-row"><span>Room</span><b id="settingsRoom">Personal room</b></div>
+        <div class="settings-row"><span>Player</span><b>YouTube embedded player</b></div>
       </div>
-    </div>
 
-    <div class="home-actions">
-      <button class="feature-card" data-go="searchPage">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-        </span>
-        <span><b>Discover music</b><small>Find your next favourite</small></span>
-        <span class="feature-arrow">›</span>
-      </button>
+      <div class="settings-card">
+        <h2>ACCOUNT</h2>
+        <p>Sign out to switch account or lock the app.</p>
+        <button type="button" id="logoutBtn" class="text-button">LOGOUT</button>
+      </div>
+    </section>
+  </main>
 
-      <button class="feature-card" data-go="queuePage">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-        </span>
-        <span><b>Your queue</b><small>Manage upcoming songs</small></span>
-        <span class="feature-arrow">›</span>
-      </button>
-    </div>
-  </section>
-
-  <section class="page" id="searchPage">
-    <div class="page-heading">
-      <p class="eyebrow">FIND YOUR SOUND</p>
-      <h1>Discover <span>music.</span></h1>
-    </div>
-
-    <div class="search-box">
+  <!-- Bottom Mobile Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="homePage">
+      <svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+      <span>HOME</span>
+    </button>
+    <button class="nav-item" data-page="searchPage">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input id="searchInput" type="search" placeholder="Songs, artists, albums..." autocomplete="off">
-      <button id="searchButton" aria-label="Search">
-        <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-      </button>
-    </div>
+      <span>SEARCH</span>
+    </button>
+    <button class="nav-item" data-page="queuePage">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      <span>QUEUE</span>
+    </button>
+    <button class="nav-item" data-page="playlistsPage">
+      <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Zm12-2a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Z"/></svg>
+      <span>PLAYLISTS</span>
+    </button>
+    <button class="nav-item" data-page="settingsPage">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.5v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6v-2.5h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.5v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      <span>SETTINGS</span>
+    </button>
+  </nav>
 
-    <div class="results-heading">
-      <h2>SEARCH RESULTS</h2>
-      <span id="resultCount">UP TO 8</span>
-    </div>
-
-    <p id="searchStatus" class="status-text">Search for a song or artist.</p>
-    <div id="searchResults" class="song-list"></div>
-  </section>
-
-  <section class="page" id="queuePage">
-    <div class="page-heading">
-      <p class="eyebrow">UP NEXT</p>
-      <h1>Your <span>queue.</span></h1>
-    </div>
-
-    <div class="results-heading">
-      <h2>UPCOMING SONGS</h2>
-      <button id="clearQueueButton" class="text-button">CLEAR ALL</button>
-    </div>
-
-    <div id="queueList" class="song-list"></div>
-  </section>
-
-  <section class="page" id="playlistsPage">
-    <div class="page-heading">
-      <p class="eyebrow">YOUR COLLECTION</p>
-      <h1>Your <span>playlists.</span></h1>
-    </div>
-
-    <div class="create-playlist-box">
-      <input id="playlistName" type="text" placeholder="Name your playlist" maxlength="50">
-      <button id="createPlaylist" aria-label="Create playlist">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-    </div>
-
-    <div id="playlistList" class="song-list"></div>
-  </section>
-
-  <section class="page" id="settingsPage">
-    <div class="page-heading">
-      <p class="eyebrow">PERSONALISE</p>
-      <h1>Settings<span>.</span></h1>
-    </div>
-
-    <div class="settings-card">
-      <div class="settings-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 0 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 0 1 0-4h.2a2 2 0 0 0 1.4-3.4l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 0 1 4 0v.2a2 2 0 0 0 1.4 1.4l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 0 1 0 4h-.2a2 2 0 0 0-1.4 3.4Z"/></svg>
-      </div>
-      <h2>TANANG MUSIC</h2>
-      <p>Personal music space.</p>
-      <div class="settings-row"><span>User</span><b id="settingsUser">Not logged in</b></div>
-      <div class="settings-row"><span>Room</span><b id="settingsRoom">Personal room</b></div>
-      <div class="settings-row"><span>Player</span><b>YouTube embedded player</b></div>
-    </div>
-
-    <div class="settings-card room-help">
-      <h2>SESSION SECURITY</h2>
-      <p>Lock your session anytime to require your password/hash key again.</p>
-      <button type="button" id="lockSessionBtn" class="text-button" style="margin-top: 10px;">LOCK SESSION</button>
-    </div>
-  </section>
-</main>
-
-<nav class="bottom-nav">
-  <button class="nav-item active" data-page="homePage">
-    <svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-    <span>HOME</span>
-  </button>
-  <button class="nav-item" data-page="searchPage">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-    <span>SEARCH</span>
-  </button>
-  <button class="nav-item" data-page="queuePage">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-    <span>QUEUE</span>
-  </button>
-  <button class="nav-item" data-page="playlistsPage">
-    <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Zm12-2a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Z"/></svg>
-    <span>PLAYLISTS</span>
-  </button>
-  <button class="nav-item" data-page="settingsPage">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.5v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6v-2.5h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.5v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-    <span>SETTINGS</span>
-  </button>
-</nav>
+</div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -714,6 +761,7 @@ const state = {
   playlists: [],
   playerReady: false,
   isPlaying: false,
+  authBusy: false,
 };
 
 let ytPlayer = null;
@@ -737,56 +785,127 @@ document.querySelectorAll("[data-go]").forEach((el) => {
   });
 });
 
-async function handleAuth(action) {
-  const username = document.getElementById("authUsername").value.trim();
-  const password = document.getElementById("authSecret").value;
-  const statusEl = document.getElementById("authStatus");
-  const hashBox = document.getElementById("hashPreviewBox");
-  const hashVal = document.getElementById("hashPreviewValue");
-
-  if (!username || password.length < 8) {
-    statusEl.textContent = "Enter a username and secret of at least 8 characters.";
-    return;
+function getSavedUsers() {
+  try {
+    return JSON.parse(localStorage.getItem("tanang_users") || "{}");
+  } catch {
+    return {};
   }
+}
 
-  statusEl.textContent = "Verifying with server...";
-  const storedHash = sessionStorage.getItem("tanang_test_hash") || "";
-  const payload = { action, username, password };
-  if (action === "verify") payload.password_hash = storedHash;
+function saveUserHash(username, hash) {
+  const users = getSavedUsers();
+  users[username.toLowerCase()] = hash;
+  localStorage.setItem("tanang_users", JSON.stringify(users));
+}
 
-  const res = await fetch("/api/auth", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-
-  if (!res.ok) {
-    statusEl.textContent = data.error || "Authentication failed.";
-    return;
-  }
-
-  if (action === "register") {
-    sessionStorage.setItem("tanang_test_hash", data.password_hash);
-    hashBox.style.display = "block";
-    hashVal.textContent = data.password_hash;
-    statusEl.textContent = "Salted scrypt hash generated! Click 'Verify & Login' to enter.";
-    return;
-  }
-
+function enterApp(username, token) {
   state.user = username;
-  state.token = data.token;
+  state.token = token;
   document.getElementById("settingsUser").textContent = username;
   document.getElementById("authGate").classList.add("hidden");
+  document.getElementById("authStatus").textContent = "";
   loadPlaylists();
 }
 
-document.getElementById("registerHashBtn").addEventListener("click", () => handleAuth("register"));
-document.getElementById("loginHashBtn").addEventListener("click", () => handleAuth("verify"));
-document.getElementById("lockSessionBtn").addEventListener("click", () => {
+async function handleAuth(mode) {
+  if (state.authBusy) return;
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authSecret").value;
+  const statusEl = document.getElementById("authStatus");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+
+  if (!username || password.length < 8) {
+    statusEl.textContent = "Enter username and password (minimum 8 characters).";
+    return;
+  }
+
+  state.authBusy = true;
+  loginBtn.disabled = true;
+  registerBtn.disabled = true;
+  statusEl.textContent = mode === "register" ? "Creating account..." : "Signing in...";
+
+  try {
+    const users = getSavedUsers();
+    const key = username.toLowerCase();
+
+    if (mode === "register") {
+      if (users[key]) {
+        statusEl.textContent = "User already exists. Tap Login instead.";
+        return;
+      }
+      const regRes = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register", username, password }),
+      });
+      const regData = await regRes.json();
+      if (!regRes.ok) {
+        statusEl.textContent = regData.error || "Registration failed.";
+        return;
+      }
+      saveUserHash(username, regData.password_hash);
+
+      // Automatically verify & sign in right after registering
+      const verRes = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          username,
+          password,
+          password_hash: regData.password_hash,
+        }),
+      });
+      const verData = await verRes.json();
+      if (verRes.ok && verData.authenticated) {
+        enterApp(username, verData.token);
+      } else {
+        statusEl.textContent = "Registered! Tap Login to enter.";
+      }
+      return;
+    }
+
+    // Login flow
+    const storedHash = users[key];
+    if (!storedHash) {
+      statusEl.textContent = "Account not found. Tap Register first.";
+      return;
+    }
+
+    const verRes = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "verify",
+        username,
+        password,
+        password_hash: storedHash,
+      }),
+    });
+    const verData = await verRes.json();
+    if (!verRes.ok || !verData.authenticated) {
+      statusEl.textContent = verData.error || "Incorrect username or password.";
+      return;
+    }
+    enterApp(username, verData.token);
+  } catch {
+    statusEl.textContent = "Network error. Please try again.";
+  } finally {
+    state.authBusy = false;
+    loginBtn.disabled = false;
+    registerBtn.disabled = false;
+  }
+}
+
+document.getElementById("loginBtn").addEventListener("click", () => handleAuth("login"));
+document.getElementById("registerBtn").addEventListener("click", () => handleAuth("register"));
+document.getElementById("logoutBtn").addEventListener("click", () => {
   state.token = null;
+  document.getElementById("authSecret").value = "";
   document.getElementById("authGate").classList.remove("hidden");
-  document.getElementById("authStatus").textContent = "Session locked.";
+  document.getElementById("authStatus").textContent = "";
 });
 
 window.onYouTubeIframeAPIReady = function () {
@@ -932,7 +1051,7 @@ async function performSearch() {
 
   const tracks = data.tracks || [];
   document.getElementById("resultCount").textContent = `${tracks.length} FOUND`;
-  statusEl.textContent = data.cached ? "Loaded from cache (0 extra search quota used)." : "Fresh YouTube API search.";
+  statusEl.textContent = tracks.length ? "" : "No songs found.";
 
   tracks.forEach((track) => {
     const item = document.createElement("div");

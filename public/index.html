@@ -1469,6 +1469,45 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+
+// 1. Prevent YouTube iframe from detecting background/hidden tab state
+try {
+  Object.defineProperty(document, "hidden", { get: () => false, configurable: true });
+  Object.defineProperty(document, "visibilityState", { get: () => "visible", configurable: true });
+} catch {}
+
+document.addEventListener(
+  "visibilitychange",
+  (e) => {
+    e.stopImmediatePropagation();
+    if (state.currentTrack && !state.userPausedManually && ytPlayer && state.playerReady) {
+      setTimeout(() => {
+        if (!state.userPausedManually) ytPlayer.playVideo();
+      }, 150);
+    }
+  },
+  true
+);
+
+// 2. Keep an active Web Audio context alive so Android treats Chrome as an active audio app
+let bgAudioCtx = null;
+function unlockBackgroundAudio() {
+  try {
+    if (!bgAudioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      bgAudioCtx = new AudioCtx();
+      const osc = bgAudioCtx.createOscillator();
+      const gain = bgAudioCtx.createGain();
+      gain.gain.value = 0.0001;
+      osc.connect(gain);
+      gain.connect(bgAudioCtx.destination);
+      osc.start();
+    }
+    if (bgAudioCtx.state === "suspended") bgAudioCtx.resume();
+  } catch {}
+}
+document.addEventListener("pointerdown", unlockBackgroundAudio, { once: true });
+
 const PLAY_SVG = `<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>`;
 const PAUSE_SVG = `<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>`;
 

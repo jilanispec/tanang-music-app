@@ -57,6 +57,7 @@ def serve_home():
 
 
 @app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify({
         "status": "ok",
@@ -66,6 +67,7 @@ def health():
 
 
 @app.route("/api/auth", methods=["GET", "POST", "OPTIONS"])
+@app.route("/auth", methods=["GET", "POST", "OPTIONS"])
 def auth():
     if request.method == "OPTIONS":
         return make_response("", 204)
@@ -100,6 +102,7 @@ def auth():
 
 
 @app.route("/api/youtube_search", methods=["GET"])
+@app.route("/youtube_search", methods=["GET"])
 def youtube_search():
     query = (request.args.get("q") or "").strip().lower()
     if not query:

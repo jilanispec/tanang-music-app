@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 import hashlib
 import hmac
 import json
@@ -16,17 +17,41 @@ app = Flask(__name__, static_folder=PUBLIC_DIR, static_url_path="")
 SEARCH_CACHE: dict[str, list[dict]] = {}
 MEMORY_DB: dict[str, str] = {}
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
 DEFAULT_CONFIG = {
-    "version": "v2.0",
-    "announcement_title": "Welcome to TANANG MUSIC 2.0",
-    "announcement_body": "Search movies, hero hits, albums, and import YouTube or Spotify playlists.",
-    "featured_query": "Telugu superhit songs",
-    "maintenance_banner": "",
+    "version": "v2.2",
+    "published_at": "Nov 25, 2026 · 05:50 PM IST",
+    "announcement_title": "Welcome to TANANG MUSIC 2.2",
+    "announcement_body": "Explore personalized playlists, movie hits, and Spotify/YouTube playlist imports.",
+    "slides": [
+        {
+            "title": "Telugu Mass & Melody Mix",
+            "subtitle": "Non-stop chartbusters curated for you",
+            "image": "",
+            "query": "Telugu latest hit songs",
+            "is_ad": False,
+        },
+        {
+            "title": "Devara & Mass Hero Jukeboxes",
+            "subtitle": "Tap to play full movie audio albums",
+            "image": "",
+            "query": "Devara movie songs",
+            "is_ad": False,
+        },
+        {
+            "title": "TANANG MUSIC Pro Experience",
+            "subtitle": "Ad-supported free streaming · Custom playlists",
+            "image": "",
+            "query": "Anirudh Ravichander hits",
+            "is_ad": True,
+        },
+    ],
 }
 
 
 # ---------------------------------------------------------------------------
-# Upstash Redis / Vercel KV REST Helper (with automatic in-memory fallback)
+# Upstash Redis / Vercel KV REST Helper
 # ---------------------------------------------------------------------------
 def _kv_headers():
     token = (
@@ -120,7 +145,7 @@ def sign_session_token(username: str, secret: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Routes
+# Core App Routes
 # ---------------------------------------------------------------------------
 @app.route("/", methods=["GET"])
 def serve_home():
@@ -156,8 +181,7 @@ def auth():
 
     if action == "register":
         display_name = (data.get("display_name") or username).strip()
-        existing = kv_get(user_key)
-        if existing:
+        if kv_get(user_key):
             return jsonify({"error": "Username already taken. Please login."}), 409
         try:
             pw_hash = hash_password(password)
@@ -208,6 +232,7 @@ def user_data():
             "liked": [],
             "favorites": [],
             "playlists": [],
+            "recent_queries": [],
         }
         return jsonify(library), 200
 
@@ -220,9 +245,22 @@ def user_data():
         "liked": data.get("liked", []),
         "favorites": data.get("favorites", []),
         "playlists": data.get("playlists", []),
+        "recent_queries": data.get("recent_queries", [])[:8],
     }
     kv_set(f"tanang:lib:{username}", library)
     return jsonify({"saved": True}), 200
+
+
+@app.route("/api/admin_verify", methods=["POST", "OPTIONS"])
+def admin_verify():
+    if request.method == "OPTIONS":
+        return make_response("", 204)
+    data = request.get_json(silent=True) or {}
+    admin_key = (data.get("admin_key") or "").strip()
+    expected = os.environ.get("AUTH_SECRET", "")
+    if not expected or not hmac.compare_digest(admin_key, expected):
+        return jsonify({"authorized": False, "error": "Invalid Admin Key"}), 403
+    return jsonify({"authorized": True}), 200
 
 
 @app.route("/api/app_config", methods=["GET", "POST", "OPTIONS"])
@@ -242,17 +280,37 @@ def app_config():
         return jsonify({"error": "Invalid Admin Secret Key"}), 403
 
     current = kv_get("tanang:app_config") or dict(DEFAULT_CONFIG)
-    current["version"] = (data.get("version") or current["version"]).strip()
-    current["announcement_title"] = (data.get("announcement_title") or "").strip()
-    current["announcement_body"] = (data.get("announcement_body") or "").strip()
-    current["featured_query"] = (data.get("featured_query") or current["featured_query"]).strip()
-    current["maintenance_banner"] = (data.get("maintenance_banner") or "").strip()
+    now_str = datetime.now(IST).strftime("%b %d, %Y · %I:%M %p IST")
+
+    current["version"] = (data.get("version") or current.get("version", "v2.2")).strip()
+    current["published_at"] = now_str
+    current["announcement_title"] = (data.get("announcement_title") or current.get("announcement_title", "")).strip()
+    current["announcement_body"] = (data.get("announcement_body") or current.get("announcement_body", "")).strip()
+
+    if isinstance(data.get("slides"), list):
+        clean_slides = []
+        for s in data["slides"]:
+            if not isinstance(s, dict):
+                continue
+            title = (s.get("title") or "").strip()
+            image = (s.get("image") or "").strip()
+            if not title and not image:
+                continue
+            clean_slides.append({
+                "title": title or "Featured Mix",
+                "subtitle": (s.get("subtitle") or "").strip(),
+                "image": image,
+                "query": (s.get("query") or title or "Telugu hit songs").strip(),
+                "is_ad": bool(s.get("is_ad")),
+            })
+        if clean_slides:
+            current["slides"] = clean_slides
 
     kv_set("tanang:app_config", current)
     return jsonify({"updated": True, "config": current}), 200
 
 
-def _yt_search_videos(query: str, api_key: str, max_results: int = 12) -> list[dict]:
+def _yt_search_videos(query: str, api_key: str, max_results: int = 10) -> list[dict]:
     cache_key = f"vid:{max_results}:{query.lower()}"
     if cache_key in SEARCH_CACHE:
         return SEARCH_CACHE[cache_key]
@@ -292,6 +350,45 @@ def _yt_search_videos(query: str, api_key: str, max_results: int = 12) -> list[d
     return tracks
 
 
+def _yt_search_playlists(query: str, api_key: str, max_results: int = 6) -> list[dict]:
+    pl_cache = f"pl:{max_results}:{query.lower()}"
+    if pl_cache in SEARCH_CACHE:
+        return SEARCH_CACHE[pl_cache]
+
+    resp = requests.get(
+        "https://www.googleapis.com/youtube/v3/search",
+        params={
+            "part": "snippet",
+            "type": "playlist",
+            "maxResults": max_results,
+            "q": f"{query} music playlist",
+            "key": api_key,
+        },
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return []
+
+    playlists = []
+    for item in resp.json().get("items", []):
+        pid = item.get("id", {}).get("playlistId")
+        snip = item.get("snippet", {})
+        if not pid:
+            continue
+        playlists.append({
+            "playlistId": pid,
+            "title": snip.get("title", ""),
+            "artist": snip.get("channelTitle", ""),
+            "thumbnail": (
+                snip.get("thumbnails", {}).get("high", {}).get("url")
+                or snip.get("thumbnails", {}).get("default", {}).get("url")
+            ),
+            "kind": "playlist",
+        })
+    SEARCH_CACHE[pl_cache] = playlists
+    return playlists
+
+
 @app.route("/api/youtube_search", methods=["GET"])
 def youtube_search():
     raw_q = (request.args.get("q") or "").strip()
@@ -303,54 +400,41 @@ def youtube_search():
     if not api_key:
         return jsonify({"error": "Music search service is not configured"}), 500
 
-    # Tailor search query by selected filter (Movie, Hero/Actor, Album, Playlist)
+    if filter_type == "playlist":
+        playlists = _yt_search_playlists(raw_q, api_key, max_results=10)
+        return jsonify({"cached": False, "tracks": playlists}), 200
+
     if filter_type == "movie":
         search_q = f"{raw_q} movie full audio jukebox songs"
     elif filter_type == "hero":
         search_q = f"{raw_q} hit songs jukebox"
     elif filter_type == "album":
         search_q = f"{raw_q} full album audio songs"
-    elif filter_type == "playlist":
-        # Search YouTube playlists directly
-        pl_cache = f"pl:{raw_q.lower()}"
-        if pl_cache in SEARCH_CACHE:
-            return jsonify({"cached": True, "tracks": SEARCH_CACHE[pl_cache]}), 200
-        resp = requests.get(
-            "https://www.googleapis.com/youtube/v3/search",
-            params={
-                "part": "snippet",
-                "type": "playlist",
-                "maxResults": 8,
-                "q": f"{raw_q} music playlist",
-                "key": api_key,
-            },
-            timeout=10,
-        )
-        if resp.status_code != 200:
-            return jsonify({"error": "Search failed"}), resp.status_code
-        playlists = []
-        for item in resp.json().get("items", []):
-            pid = item.get("id", {}).get("playlistId")
-            snip = item.get("snippet", {})
-            if not pid:
-                continue
-            playlists.append({
-                "playlistId": pid,
-                "title": snip.get("title", ""),
-                "artist": snip.get("channelTitle", ""),
-                "thumbnail": (
-                    snip.get("thumbnails", {}).get("high", {}).get("url")
-                    or snip.get("thumbnails", {}).get("default", {}).get("url")
-                ),
-                "kind": "playlist",
-            })
-        SEARCH_CACHE[pl_cache] = playlists
-        return jsonify({"cached": False, "tracks": playlists}), 200
     else:
         search_q = raw_q
 
-    tracks = _yt_search_videos(search_q, api_key, max_results=12)
+    tracks = _yt_search_videos(search_q, api_key, max_results=10)
+
+    # Mix matching playlists into "All" results so users see square playlist cards
+    if filter_type == "all":
+        matching_playlists = _yt_search_playlists(raw_q, api_key, max_results=3)
+        combined = []
+        if matching_playlists:
+            combined.extend(matching_playlists[:2])
+        combined.extend(tracks)
+        return jsonify({"cached": False, "tracks": combined}), 200
+
     return jsonify({"cached": False, "tracks": tracks}), 200
+
+
+@app.route("/api/recommendations", methods=["GET"])
+def recommendations():
+    seed = (request.args.get("q") or "Telugu hit songs").strip()
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if not api_key:
+        return jsonify({"playlists": []}), 200
+    playlists = _yt_search_playlists(seed, api_key, max_results=6)
+    return jsonify({"playlists": playlists}), 200
 
 
 @app.route("/api/playlist_tracks", methods=["GET"])
@@ -400,6 +484,81 @@ def playlist_tracks():
     return jsonify({"tracks": tracks}), 200
 
 
+def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
+    """Extract playlist title and actual track + artist queries from Spotify embed JSON."""
+    parsed = urlparse(spotify_url)
+    # Match /playlist/<id> or /album/<id> (including regional paths like /intl-en/playlist/<id>)
+    match = re.search(r"/(playlist|album)/([a-zA-Z0-9]+)", parsed.path)
+    if not match:
+        raise ValueError("Invalid Spotify playlist or album URL")
+
+    kind, item_id = match.group(1), match.group(2)
+    embed_url = f"https://open.spotify.com/embed/{kind}/{item_id}"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    resp = requests.get(embed_url, headers=headers, timeout=10)
+    html = resp.text
+
+    playlist_title = f"Spotify {kind.title()}"
+    queries: list[str] = []
+
+    # Parse __NEXT_DATA__ JSON inside Spotify's embed page
+    next_data_match = re.search(
+        r'<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)</script>',
+        html,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if next_data_match:
+        try:
+            payload = json.loads(next_data_match.group(1))
+            entity = (
+                payload.get("props", {})
+                .get("pageProps", {})
+                .get("state", {})
+                .get("data", {})
+                .get("entity", {})
+            )
+            if entity.get("name"):
+                playlist_title = entity["name"]
+            elif entity.get("title"):
+                playlist_title = entity["title"]
+
+            track_list = entity.get("trackList") or []
+            for entry in track_list:
+                t_title = (entry.get("title") or "").strip()
+                t_sub = (entry.get("subtitle") or "").strip()
+                if t_title:
+                    queries.append(f"{t_title} {t_sub}".strip())
+        except Exception:
+            pass
+
+    # Fallback regex on trackList JSON if __NEXT_DATA__ structure varies
+    if not queries:
+        pair_matches = re.findall(
+            r'"title":"([^"]{2,100})","subtitle":"([^"]{1,100})"',
+            html,
+        )
+        for t_title, t_sub in pair_matches:
+            clean_title = t_title.encode("utf-8").decode("unicode_escape", errors="ignore").strip()
+            clean_sub = t_sub.encode("utf-8").decode("unicode_escape", errors="ignore").strip()
+            if clean_title and clean_title.lower() != playlist_title.lower():
+                queries.append(f"{clean_title} {clean_sub}".strip())
+
+    # Deduplicate while preserving exact playlist order
+    seen = set()
+    unique_queries = []
+    for q in queries:
+        key = q.lower()
+        if key not in seen:
+            seen.add(key)
+            unique_queries.append(q)
+
+    return playlist_title, unique_queries
+
+
 @app.route("/api/import_playlist", methods=["POST", "OPTIONS"])
 def import_playlist():
     if request.method == "OPTIONS":
@@ -414,12 +573,12 @@ def import_playlist():
 
     api_key = os.environ.get("YOUTUBE_API_KEY")
     if not api_key:
-        return jsonify({"error": "Search service not configured"}), 500
+        return jsonify({"error": "Music search service is not configured"}), 500
 
     parsed = urlparse(raw_url)
     host = parsed.netloc.lower()
 
-    # 1. YouTube Playlist URL (?list=PL...)
+    # 1. YouTube Playlist URL
     if "youtube.com" in host or "youtu.be" in host:
         qs = parse_qs(parsed.query)
         pl_id = (qs.get("list") or [None])[0]
@@ -459,45 +618,26 @@ def import_playlist():
             "tracks": tracks,
         }), 200
 
-    # 2. Spotify Playlist / Album URL (extracts title & track names from public page metadata)
+    # 2. Spotify Playlist / Album URL
     if "spotify.com" in host:
         try:
-            page = requests.get(
-                raw_url,
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            html = page.text
-            title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
-            page_title = re.sub(r"\s*\|\s*Spotify.*$", "", title_match.group(1)).strip() if title_match else "Spotify Playlist"
-
-            # Extract track/artist pairs from Spotify embed/open metadata
-            track_names = re.findall(r'"name":"([^"]{2,80})"', html)
-            seen = set()
-            queries = []
-            for name in track_names:
-                clean = name.strip()
-                if clean.lower() in seen or clean.lower() == page_title.lower():
-                    continue
-                seen.add(clean.lower())
-                queries.append(clean)
-                if len(queries) >= 12:
-                    break
-
-            if not queries:
-                queries = [page_title]
+            sp_title, track_queries = _extract_spotify_tracks(raw_url)
+            if not track_queries:
+                return jsonify({"error": "Could not read songs from that Spotify link (ensure playlist is Public)"}), 400
 
             tracks = []
-            for q_item in queries[:10]:
-                matches = _yt_search_videos(f"{q_item} audio song", api_key, max_results=1)
+            for t_query in track_queries[:15]:
+                matches = _yt_search_videos(f"{t_query} audio song", api_key, max_results=1)
                 if matches:
                     tracks.append(matches[0])
 
             return jsonify({
-                "name": custom_name or page_title,
+                "name": custom_name or sp_title,
                 "tracks": tracks,
             }), 200
+        except ValueError as ve:
+            return jsonify({"error": str(ve)}), 400
         except Exception:
-            return jsonify({"error": "Could not read Spotify playlist link"}), 400
+            return jsonify({"error": "Failed to import Spotify playlist"}), 400
 
     return jsonify({"error": "Unsupported link. Paste a YouTube or Spotify playlist URL."}), 400

@@ -463,41 +463,101 @@ def _fetch_full_youtube_playlist(playlist_id: str, api_key: str, max_tracks: int
     return pl_title or "YouTube Playlist", tracks
 
 
+
+import re
+import json
+import requests
+from flask import request, jsonify
+
+SEARCH_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 @app.route("/api/youtube_search", methods=["GET"])
 def youtube_search():
-    raw_q = (request.args.get("q") or "").strip()
-    filter_type = (request.args.get("filter") or "all").strip().lower()
-    if not raw_q:
-        return jsonify({"error": "Missing query parameter 'q'"}), 400
+    query = (request.args.get("q") or "").strip()
+    search_filter = (request.args.get("filter") or "all").strip().lower()
+    if not query:
+        return jsonify({"tracks": []}), 200
 
-    api_key = os.environ.get("YOUTUBE_API_KEY")
-    if not api_key:
-        return jsonify({"error": "Music search service is not configured"}), 500
+    tracks = []
+    try:
+        resp = requests.get(
+            "https://www.youtube.com/results",
+            params={"search_query": query, "hl": "en"},
+            headers=SEARCH_HEADERS,
+            timeout=7,
+        )
+        if resp.status_code == 200:
+            match = re.search(r"var ytInitialData = (\{.*?\});</script>", resp.text)
+            if not match:
+                match = re.search(r"ytInitialData\s*=\s*(\{.*?\});", resp.text)
+            if match:
+                data = json.loads(match.group(1))
+                stack = [data]
+                seen_ids = set()
+                while stack and len(tracks) < 25:
+                    node = stack.pop()
+                    if isinstance(node, dict):
+                        if "videoRenderer" in node:
+                            vr = node["videoRenderer"]
+                            vid = vr.get("videoId", "")
+                            if len(vid) == 11 and vid not in seen_ids:
+                                seen_ids.add(vid)
+                                title_runs = (vr.get("title") or {}).get("runs") or []
+                                title = "".join(r.get("text", "") for r in title_runs).strip()
+                                owner_runs = (vr.get("ownerText") or {}).get("runs") or []
+                                artist = "".join(r.get("text", "") for r in owner_runs).strip() or "YouTube"
+                                thumbs = ((vr.get("thumbnail") or {}).get("thumbnails")) or []
+                                thumb = thumbs[-1].get("url", f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg") if thumbs else f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                                if title:
+                                    tracks.append({
+                                        "kind": "video",
+                                        "videoId": vid,
+                                        "title": title,
+                                        "artist": artist,
+                                        "thumbnail": thumb,
+                                    })
+                        for v in node.values():
+                            if isinstance(v, (dict, list)):
+                                stack.append(v)
+                    elif isinstance(node, list):
+                        for item in node:
+                            if isinstance(item, (dict, list)):
+                                stack.append(item)
+    except Exception:
+        pass
 
-    if filter_type == "playlist":
-        playlists = _yt_search_playlists(raw_q, api_key, max_results=10)
-        return jsonify({"cached": False, "tracks": playlists}), 200
+    # Fallback to Piped search if direct scrape returned nothing
+    if not tracks:
+        for base in ["https://pipedapi.kavin.rocks", "https://pipedapi.tokhmi.xyz", "https://pipedapi.moomoo.me"]:
+            try:
+                r = requests.get(f"{base}/search", params={"q": query, "filter": "videos"}, timeout=5)
+                if r.status_code == 200:
+                    for item in (r.json().get("items") or [])[:20]:
+                        url = item.get("url") or ""
+                        vid = url.split("v=")[-1].split("&")[0]
+                        if len(vid) == 11 and item.get("title"):
+                            tracks.append({
+                                "kind": "video",
+                                "videoId": vid,
+                                "title": item.get("title"),
+                                "artist": item.get("uploaderName") or "YouTube",
+                                "thumbnail": item.get("thumbnail") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                            })
+                    if tracks:
+                        break
+            except Exception:
+                continue
 
-    if filter_type == "movie":
-        search_q = f"{raw_q} movie full audio jukebox songs"
-    elif filter_type == "hero":
-        search_q = f"{raw_q} hit songs jukebox"
-    elif filter_type == "album":
-        search_q = f"{raw_q} full album audio songs"
-    else:
-        search_q = raw_q
+    if search_filter == "movie":
+        movie_kw = ("song", "lyrical", "video", "ost", "theme", "bgm", "movie")
+        filtered = [t for t in tracks if any(k in t["title"].lower() for k in movie_kw)]
+        if filtered:
+            tracks = filtered
 
-    tracks = _yt_search_videos(search_q, api_key, max_results=10)
-
-    if filter_type == "all":
-        matching_playlists = _yt_search_playlists(raw_q, api_key, max_results=3)
-        combined = []
-        if matching_playlists:
-            combined.extend(matching_playlists[:2])
-        combined.extend(tracks)
-        return jsonify({"cached": False, "tracks": combined}), 200
-
-    return jsonify({"cached": False, "tracks": tracks}), 200
+    return jsonify({"tracks": tracks}), 200
 
 
 @app.route("/api/recommendations", methods=["GET"])

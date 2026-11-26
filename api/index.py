@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
@@ -6,8 +6,9 @@ import os
 import re
 import secrets
 from urllib.parse import parse_qs, urlparse
-import requests
+
 from flask import Flask, jsonify, make_response, request, send_from_directory
+import requests
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
@@ -35,15 +36,18 @@ DEFAULT_CONFIG = {
     ],
 }
 
-import requests
-from flask import jsonify
-
 PIPED_INSTANCES = [
     "https://pipedapi.kavin.rocks",
     "https://pipedapi.tokhmi.xyz",
     "https://pipedapi.moomoo.me",
     "https://api.piped.yt",
 ]
+
+SEARCH_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 
 @app.route("/api/stream/<video_id>", methods=["GET"])
 def get_audio_stream(video_id):
@@ -70,7 +74,7 @@ def get_audio_stream(video_id):
             continue
 
     return jsonify({"error": "No stream available"}), 502
-    
+
 
 def _kv_headers():
     token = (
@@ -323,44 +327,49 @@ def app_config():
     return jsonify({"updated": True, "config": current}), 200
 
 
-def _yt_search_videos(query: str, api_key: str, max_results: int = 10) -> list[dict]:
+def _yt_search_videos(query: str, api_key: str, max_results: int = 12) -> list[dict]:
     cache_key = f"vid:{max_results}:{query.lower()}"
     if cache_key in SEARCH_CACHE:
         return SEARCH_CACHE[cache_key]
 
-    resp = requests.get(
-        "https://www.googleapis.com/youtube/v3/search",
-        params={
-            "part": "snippet",
-            "type": "video",
-            "videoCategoryId": "10",
-            "maxResults": max_results,
-            "q": query,
-            "key": api_key,
-        },
-        timeout=10,
-    )
-    if resp.status_code != 200:
-        return []
+    try:
+        resp = requests.get(
+            "https://www.googleapis.com/youtube/v3/search",
+            params={
+                "part": "snippet",
+                "type": "video",
+                "videoCategoryId": "10",
+                "maxResults": max_results,
+                "q": query,
+                "key": api_key,
+            },
+            timeout=8,
+        )
+        if resp.status_code != 200:
+            return []
 
-    tracks = []
-    for item in resp.json().get("items", []):
-        vid = item.get("id", {}).get("videoId")
-        snip = item.get("snippet", {})
-        if not vid:
-            continue
-        tracks.append({
-            "videoId": vid,
-            "title": snip.get("title", ""),
-            "artist": snip.get("channelTitle", ""),
-            "thumbnail": (
-                snip.get("thumbnails", {}).get("high", {}).get("url")
-                or snip.get("thumbnails", {}).get("default", {}).get("url")
-            ),
-            "kind": "song",
-        })
-    SEARCH_CACHE[cache_key] = tracks
-    return tracks
+        tracks = []
+        for item in resp.json().get("items", []):
+            vid = item.get("id", {}).get("videoId")
+            snip = item.get("snippet", {})
+            if not vid:
+                continue
+            tracks.append({
+                "videoId": vid,
+                "title": snip.get("title", ""),
+                "artist": snip.get("channelTitle", ""),
+                "thumbnail": (
+                    snip.get("thumbnails", {}).get("high", {}).get("url")
+                    or snip.get("thumbnails", {}).get("default", {}).get("url")
+                    or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                ),
+                "kind": "song",
+            })
+        if tracks:
+            SEARCH_CACHE[cache_key] = tracks
+        return tracks
+    except Exception:
+        return []
 
 
 def _yt_search_playlists(query: str, api_key: str, max_results: int = 8) -> list[dict]:
@@ -368,42 +377,122 @@ def _yt_search_playlists(query: str, api_key: str, max_results: int = 8) -> list
     if pl_cache in SEARCH_CACHE:
         return SEARCH_CACHE[pl_cache]
 
-    resp = requests.get(
-        "https://www.googleapis.com/youtube/v3/search",
-        params={
-            "part": "snippet",
-            "type": "playlist",
-            "maxResults": max_results,
-            "q": f"{query} music playlist",
-            "key": api_key,
-        },
-        timeout=10,
-    )
-    if resp.status_code != 200:
+    try:
+        resp = requests.get(
+            "https://www.googleapis.com/youtube/v3/search",
+            params={
+                "part": "snippet",
+                "type": "playlist",
+                "maxResults": max_results,
+                "q": f"{query} music playlist",
+                "key": api_key,
+            },
+            timeout=8,
+        )
+        if resp.status_code != 200:
+            return []
+
+        playlists = []
+        for item in resp.json().get("items", []):
+            pid = item.get("id", {}).get("playlistId")
+            snip = item.get("snippet", {})
+            if not pid:
+                continue
+            playlists.append({
+                "playlistId": pid,
+                "title": snip.get("title", ""),
+                "artist": snip.get("channelTitle", ""),
+                "thumbnail": (
+                    snip.get("thumbnails", {}).get("high", {}).get("url")
+                    or snip.get("thumbnails", {}).get("default", {}).get("url")
+                ),
+                "kind": "playlist",
+            })
+        if playlists:
+            SEARCH_CACHE[pl_cache] = playlists
+        return playlists
+    except Exception:
         return []
 
-    playlists = []
-    for item in resp.json().get("items", []):
-        pid = item.get("id", {}).get("playlistId")
-        snip = item.get("snippet", {})
-        if not pid:
-            continue
-        playlists.append({
-            "playlistId": pid,
-            "title": snip.get("title", ""),
-            "artist": snip.get("channelTitle", ""),
-            "thumbnail": (
-                snip.get("thumbnails", {}).get("high", {}).get("url")
-                or snip.get("thumbnails", {}).get("default", {}).get("url")
-            ),
-            "kind": "playlist",
-        })
-    SEARCH_CACHE[pl_cache] = playlists
-    return playlists
+
+def _scrape_youtube_videos(query: str, max_results: int = 20) -> list[dict]:
+    tracks: list[dict] = []
+    try:
+        resp = requests.get(
+            "https://www.youtube.com/results",
+            params={"search_query": query, "hl": "en"},
+            headers=SEARCH_HEADERS,
+            timeout=7,
+        )
+        if resp.status_code == 200:
+            match = re.search(r"var ytInitialData = (\{.*?\});</script>", resp.text)
+            if not match:
+                match = re.search(r"ytInitialData\s*=\s*(\{.*?\});", resp.text)
+            if match:
+                data = json.loads(match.group(1))
+                stack = [data]
+                seen_ids = set()
+                while stack and len(tracks) < max_results:
+                    node = stack.pop()
+                    if isinstance(node, dict):
+                        if "videoRenderer" in node:
+                            vr = node["videoRenderer"]
+                            vid = vr.get("videoId", "")
+                            if len(vid) == 11 and vid not in seen_ids:
+                                seen_ids.add(vid)
+                                title_runs = (vr.get("title") or {}).get("runs") or []
+                                title = "".join(r.get("text", "") for r in title_runs).strip()
+                                owner_runs = (vr.get("ownerText") or {}).get("runs") or []
+                                artist = "".join(r.get("text", "") for r in owner_runs).strip() or "YouTube"
+                                thumbs = ((vr.get("thumbnail") or {}).get("thumbnails")) or []
+                                thumb = (
+                                    thumbs[-1].get("url")
+                                    if thumbs
+                                    else f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                                )
+                                if title:
+                                    tracks.append({
+                                        "kind": "song",
+                                        "videoId": vid,
+                                        "title": title,
+                                        "artist": artist,
+                                        "thumbnail": thumb,
+                                    })
+                        for v in node.values():
+                            if isinstance(v, (dict, list)):
+                                stack.append(v)
+                    elif isinstance(node, list):
+                        for item in node:
+                            if isinstance(item, (dict, list)):
+                                stack.append(item)
+    except Exception:
+        pass
+
+    if not tracks:
+        for base in PIPED_INSTANCES:
+            try:
+                r = requests.get(f"{base}/search", params={"q": query, "filter": "videos"}, timeout=5)
+                if r.status_code == 200:
+                    for item in (r.json().get("items") or [])[:max_results]:
+                        url = item.get("url") or ""
+                        vid = url.split("v=")[-1].split("&")[0]
+                        if len(vid) == 11 and item.get("title"):
+                            tracks.append({
+                                "kind": "song",
+                                "videoId": vid,
+                                "title": item.get("title"),
+                                "artist": item.get("uploaderName") or "YouTube",
+                                "thumbnail": item.get("thumbnail") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                            })
+                    if tracks:
+                        break
+            except Exception:
+                continue
+
+    return tracks
 
 
 def _fetch_full_youtube_playlist(playlist_id: str, api_key: str, max_tracks: int = 150) -> tuple[str, list[dict]]:
-    """Fetch exact YouTube playlist title and paginate through all playlist items."""
     pl_title = ""
     try:
         meta_resp = requests.get(
@@ -463,17 +552,6 @@ def _fetch_full_youtube_playlist(playlist_id: str, api_key: str, max_tracks: int
     return pl_title or "YouTube Playlist", tracks
 
 
-
-import re
-import json
-import requests
-from flask import request, jsonify
-
-SEARCH_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-}
-
 @app.route("/api/youtube_search", methods=["GET"])
 def youtube_search():
     query = (request.args.get("q") or "").strip()
@@ -481,81 +559,29 @@ def youtube_search():
     if not query:
         return jsonify({"tracks": []}), 200
 
-    tracks = []
-    try:
-        resp = requests.get(
-            "https://www.youtube.com/results",
-            params={"search_query": query, "hl": "en"},
-            headers=SEARCH_HEADERS,
-            timeout=7,
-        )
-        if resp.status_code == 200:
-            match = re.search(r"var ytInitialData = (\{.*?\});</script>", resp.text)
-            if not match:
-                match = re.search(r"ytInitialData\s*=\s*(\{.*?\});", resp.text)
-            if match:
-                data = json.loads(match.group(1))
-                stack = [data]
-                seen_ids = set()
-                while stack and len(tracks) < 25:
-                    node = stack.pop()
-                    if isinstance(node, dict):
-                        if "videoRenderer" in node:
-                            vr = node["videoRenderer"]
-                            vid = vr.get("videoId", "")
-                            if len(vid) == 11 and vid not in seen_ids:
-                                seen_ids.add(vid)
-                                title_runs = (vr.get("title") or {}).get("runs") or []
-                                title = "".join(r.get("text", "") for r in title_runs).strip()
-                                owner_runs = (vr.get("ownerText") or {}).get("runs") or []
-                                artist = "".join(r.get("text", "") for r in owner_runs).strip() or "YouTube"
-                                thumbs = ((vr.get("thumbnail") or {}).get("thumbnails")) or []
-                                thumb = thumbs[-1].get("url", f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg") if thumbs else f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                                if title:
-                                    tracks.append({
-                                        "kind": "video",
-                                        "videoId": vid,
-                                        "title": title,
-                                        "artist": artist,
-                                        "thumbnail": thumb,
-                                    })
-                        for v in node.values():
-                            if isinstance(v, (dict, list)):
-                                stack.append(v)
-                    elif isinstance(node, list):
-                        for item in node:
-                            if isinstance(item, (dict, list)):
-                                stack.append(item)
-    except Exception:
-        pass
-
-    # Fallback to Piped search if direct scrape returned nothing
-    if not tracks:
-        for base in ["https://pipedapi.kavin.rocks", "https://pipedapi.tokhmi.xyz", "https://pipedapi.moomoo.me"]:
-            try:
-                r = requests.get(f"{base}/search", params={"q": query, "filter": "videos"}, timeout=5)
-                if r.status_code == 200:
-                    for item in (r.json().get("items") or [])[:20]:
-                        url = item.get("url") or ""
-                        vid = url.split("v=")[-1].split("&")[0]
-                        if len(vid) == 11 and item.get("title"):
-                            tracks.append({
-                                "kind": "video",
-                                "videoId": vid,
-                                "title": item.get("title"),
-                                "artist": item.get("uploaderName") or "YouTube",
-                                "thumbnail": item.get("thumbnail") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
-                            })
-                    if tracks:
-                        break
-            except Exception:
-                continue
-
+    effective_query = query
     if search_filter == "movie":
-        movie_kw = ("song", "lyrical", "video", "ost", "theme", "bgm", "movie")
-        filtered = [t for t in tracks if any(k in t["title"].lower() for k in movie_kw)]
-        if filtered:
-            tracks = filtered
+        effective_query = f"{query} movie song"
+    elif search_filter == "hero":
+        effective_query = f"{query} songs"
+    elif search_filter == "album":
+        effective_query = f"{query} full album songs"
+
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    tracks: list[dict] = []
+
+    if search_filter == "playlist":
+        if api_key:
+            tracks = _yt_search_playlists(query, api_key, max_results=12)
+        if not tracks:
+            tracks = _scrape_youtube_videos(f"{query} playlist", max_results=15)
+        return jsonify({"tracks": tracks}), 200
+
+    if api_key:
+        tracks = _yt_search_videos(effective_query, api_key, max_results=15)
+
+    if not tracks:
+        tracks = _scrape_youtube_videos(effective_query, max_results=20)
 
     return jsonify({"tracks": tracks}), 200
 
@@ -601,11 +627,7 @@ def _extract_spotify_tracks(spotify_url: str) -> tuple[str, list[str]]:
     kind, item_id = match.group(1), match.group(2)
     embed_url = f"https://open.spotify.com/embed/{kind}/{item_id}"
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-    }
-    resp = requests.get(embed_url, headers=headers, timeout=10)
+    resp = requests.get(embed_url, headers=SEARCH_HEADERS, timeout=10)
     html = resp.text
 
     playlist_title = ""
@@ -690,7 +712,6 @@ def import_playlist():
     parsed = urlparse(raw_url)
     host = parsed.netloc.lower()
 
-    # 1. YouTube Playlist URL — fetch full playlist title & all tracks
     if "youtube.com" in host or "youtu.be" in host:
         qs = parse_qs(parsed.query)
         pl_id = (qs.get("list") or [None])[0]
@@ -706,7 +727,6 @@ def import_playlist():
             "tracks": tracks,
         }), 200
 
-    # 2. Spotify Playlist / Album URL — fetch all tracks & exact Spotify title
     if "spotify.com" in host:
         try:
             sp_title, track_queries = _extract_spotify_tracks(raw_url)

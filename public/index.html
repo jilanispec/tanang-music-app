@@ -503,7 +503,7 @@
       width: 128%;
       height: 128%;
       transform-origin: center center;
-      transition: transform 0.12s ease-out;
+      transition: transform 0.1s ease-out;
       pointer-events: none;
     }
     .video-frame.ratio-fill .video-crop-wrap {
@@ -519,67 +519,131 @@
       border: 0;
     }
 
-    /* MX Player–Style Video Overlay Controls */
+    /* Compact Transparent Icon-Only MX Video HUD */
     .mx-video-overlay {
       position: absolute;
       inset: 0;
       z-index: 12;
-      background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.22) 45%, rgba(0,0,0,0.72) 100%);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 10px 12px;
+      padding: 6px 8px;
+      opacity: 1;
       transition: opacity 0.2s ease;
+      pointer-events: none;
     }
     .mx-video-overlay.hud-hidden {
       opacity: 0;
       pointer-events: none;
     }
-    .mx-top-bar, .mx-bottom-bar {
+    .mx-top-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 4px;
+      pointer-events: auto;
+    }
+    .mx-top-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .mx-center-bar {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
+      pointer-events: auto;
     }
-    .mx-btn {
-      height: 30px;
-      padding: 0 9px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(15, 15, 18, 0.78);
-      color: var(--text);
-      font-size: 0.68rem;
-      font-weight: 800;
-      display: inline-flex;
+    .mx-bottom-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      pointer-events: auto;
+    }
+    .mx-scrubber-row {
+      display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 4px;
+      gap: 6px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.95);
+    }
+    .mx-scrubber-row input[type="range"] {
+      flex: 1;
+      height: 3px;
+      accent-color: var(--accent);
       cursor: pointer;
+      margin: 0;
     }
-    .mx-btn.active {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(250, 204, 21, 0.18);
+    .mx-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
     }
-    .mx-play-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
+
+    .mx-icon-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
       border: none;
-      background: var(--accent);
-      color: #090909;
+      background: transparent;
+      color: #ffffff;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.95));
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      font-size: 0.62rem;
+      font-weight: 900;
+    }
+    .mx-icon-btn svg {
+      width: 17px;
+      height: 17px;
+    }
+    .mx-icon-btn.cc-on {
+      background: rgba(250, 204, 21, 0.28);
+      color: var(--accent);
+      border-radius: 6px;
+    }
+    .mx-icon-btn.aspect-tag {
+      width: auto;
+      padding: 0 5px;
+      color: var(--accent);
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+    }
+    .mx-play-icon-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.95));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .mx-play-icon-btn svg {
+      width: 26px;
+      height: 26px;
+    }
+    .speed-2x-pill {
+      align-self: center;
+      font-size: 0.64rem;
+      font-weight: 900;
+      color: #090909;
+      background: var(--accent);
+      padding: 2px 7px;
+      border-radius: 6px;
+      display: none;
+    }
+    .speed-2x-pill.active {
+      display: inline-block;
     }
 
     .track-header-row {
@@ -1323,10 +1387,10 @@
           <div class="audio-mode-hint" id="audioModeHint">Strictly Audio Mode · Background Ready</div>
         </div>
 
-        <!-- VIDEO STAGE WITH MX PLAYER–STYLE OVERLAY CONTROLS -->
+        <!-- VIDEO STAGE WITH TRANSPARENT ICON-ONLY MX CONTROLS -->
         <div class="video-stage" id="videoStage">
           <div class="video-stage-bar">
-            <span style="font-size: 0.74rem; font-weight: 800; color: var(--accent);">VIDEO MODE · MX CONTROLS</span>
+            <span style="font-size: 0.74rem; font-weight: 800; color: var(--accent);">VIDEO MODE</span>
             <button type="button" class="text-button accent" id="backToAudioBtn">← BACK TO AUDIO</button>
           </div>
           <div class="video-frame ratio-16-9" id="videoFrame">
@@ -1336,25 +1400,48 @@
 
             <div class="mx-video-overlay" id="mxVideoOverlay">
               <div class="mx-top-bar">
-                <button type="button" class="mx-btn" id="mxVcToggleBtn">VC: VIDEO</button>
-                <div style="display: flex; gap: 5px;">
-                  <button type="button" class="mx-btn active" id="mxRatio169Btn">16:9</button>
-                  <button type="button" class="mx-btn" id="mxRatioFitBtn">FIT</button>
-                  <button type="button" class="mx-btn" id="mxRatioFillBtn">FILL</button>
+                <button type="button" class="mx-icon-btn" id="mxVcToggleBtn" title="Switch to Audio" aria-label="Switch to Audio">
+                  <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Zm12-2a3 3 0 1 1-3-3c1.7 0 3 1.3 3 3Z"/></svg>
+                </button>
+                <span class="speed-2x-pill" id="speed2xPill">2x SPEED</span>
+                <div class="mx-top-right">
+                  <button type="button" class="mx-icon-btn" id="mxCcToggleBtn" title="Toggle Captions" aria-label="Toggle Captions">CC</button>
+                  <button type="button" class="mx-icon-btn aspect-tag" id="mxAspectCycleBtn" title="Cycle Aspect Ratio">16:9</button>
+                  <button type="button" class="mx-icon-btn" id="mxZoomResetBtn" title="Reset Zoom" aria-label="Reset Zoom">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35M8 11h6"/></svg>
+                  </button>
                 </div>
               </div>
 
               <div class="mx-center-bar">
-                <button type="button" class="mx-btn" id="mxPrevBtn" aria-label="Previous">⏮</button>
-                <button type="button" class="mx-play-btn" id="mxPlayPauseBtn" aria-label="Play or pause">
+                <button type="button" class="mx-icon-btn" id="mxPrevBtn" title="Previous" aria-label="Previous">
+                  <svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8v16ZM5 19V5"/></svg>
+                </button>
+                <button type="button" class="mx-play-icon-btn" id="mxPlayPauseBtn" title="Play or Pause" aria-label="Play or Pause">
                   <svg id="mxPlayIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
                 </button>
-                <button type="button" class="mx-btn" id="mxNextBtn" aria-label="Next">⏭</button>
+                <button type="button" class="mx-icon-btn" id="mxNextBtn" title="Next" aria-label="Next">
+                  <svg viewBox="0 0 24 24"><path d="m5 4 10 8-10 8V4ZM19 5v14"/></svg>
+                </button>
               </div>
 
-              <div class="mx-bottom-bar">
-                <button type="button" class="mx-btn" id="mxZoomResetBtn">ZOOM 1.0x</button>
-                <button type="button" class="mx-btn" id="mxFullscreenBtn">FULL SCREEN</button>
+              <div class="mx-bottom-wrap">
+                <div class="mx-scrubber-row">
+                  <span id="mxCurTime">0:00</span>
+                  <input id="mxSeekBar" type="range" min="0" max="100" value="0">
+                  <span id="mxTotTime">0:00</span>
+                </div>
+                <div class="mx-bottom-bar">
+                  <button type="button" class="mx-icon-btn" id="mxRewind10Btn" title="Back 10s" aria-label="Back 10s">
+                    <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  </button>
+                  <button type="button" class="mx-icon-btn" id="mxForward10Btn" title="Forward 10s" aria-label="Forward 10s">
+                    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                  </button>
+                  <button type="button" class="mx-icon-btn" id="mxFullscreenBtn" title="Full Screen" aria-label="Full Screen">
+                    <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1702,6 +1789,7 @@ const AFTERNOON_SVG = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><
 const EVENING_SVG = `<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`;
 
 const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;
+const ASPECT_CYCLE = ["16-9", "fit", "fill"];
 
 const state = {
   user: null,
@@ -1738,7 +1826,10 @@ const state = {
   videoZoom: 1.0,
   videoPanX: 0,
   videoPanY: 0,
-  videoAspect: "16-9",
+  aspectIndex: 0,
+  ccEnabled: false,
+  is2xSpeed: false,
+  hudInteracting: false,
   hudTimeout: null,
 };
 
@@ -2447,6 +2538,34 @@ function getActivePlaybackDuration() {
   return 0;
 }
 
+function seekToSeconds(targetSec) {
+  const dur = getActivePlaybackDuration();
+  const clamped = dur > 0 ? Math.max(0, Math.min(dur, targetSec)) : Math.max(0, targetSec);
+  state.savedPositionSec = clamped;
+  document.getElementById("currentTime").textContent = formatTime(clamped);
+  document.getElementById("mxCurTime").textContent = formatTime(clamped);
+  if (dur > 0) {
+    const pct = String(Math.min(100, Math.round((clamped / dur) * 100)));
+    document.getElementById("seekBar").value = pct;
+    document.getElementById("mxSeekBar").value = pct;
+  }
+  if (state.activeEngine === "native" && nativeAudio.src) {
+    nativeAudio.currentTime = clamped;
+  } else if (state.activeEngine === "yt" && ytPlayer && state.playerReady && typeof ytPlayer.seekTo === "function") {
+    ytPlayer.seekTo(clamped, true);
+  }
+}
+
+function setPlaybackSpeed(rate) {
+  state.is2xSpeed = rate > 1;
+  document.getElementById("speed2xPill").classList.toggle("active", state.is2xSpeed);
+  if (state.activeEngine === "native" && nativeAudio.src) {
+    nativeAudio.playbackRate = rate;
+  } else if (ytPlayer && state.playerReady && typeof ytPlayer.setPlaybackRate === "function") {
+    ytPlayer.setPlaybackRate(rate);
+  }
+}
+
 function syncAudioVisuals(playing) {
   state.isPlaying = playing;
   const activeAudioVisual = playing && !state.videoModeActive;
@@ -2475,6 +2594,7 @@ window.onYouTubeIframeAPIReady = function () {
       controls: 0,
       disablekb: 1,
       fs: 0,
+      cc_load_policy: 0,
       iv_load_policy: 3,
       modestbranding: 1,
       playsinline: 1,
@@ -2576,30 +2696,46 @@ setInterval(() => {
   if (cur > 0) state.savedPositionSec = cur;
   document.getElementById("currentTime").textContent = formatTime(cur);
   document.getElementById("totalTime").textContent = formatTime(dur);
+  document.getElementById("mxCurTime").textContent = formatTime(cur);
+  document.getElementById("mxTotTime").textContent = formatTime(dur);
   if (dur > 0) {
-    document.getElementById("seekBar").value = String(Math.min(100, Math.round((cur / dur) * 100)));
+    const pct = String(Math.min(100, Math.round((cur / dur) * 100)));
+    document.getElementById("seekBar").value = pct;
+    document.getElementById("mxSeekBar").value = pct;
   }
 }, 500);
 
-document.getElementById("seekBar").addEventListener("input", (e) => {
-  state.isSeeking = true;
-  const pct = Number(e.target.value) / 100;
-  const dur = getActivePlaybackDuration();
-  if (dur > 0) {
-    const targetSec = pct * dur;
-    state.savedPositionSec = targetSec;
-    document.getElementById("currentTime").textContent = formatTime(targetSec);
-    if (state.activeEngine === "native" && nativeAudio.src) {
-      nativeAudio.currentTime = targetSec;
-    } else if (state.activeEngine === "yt" && ytPlayer && state.playerReady && typeof ytPlayer.seekTo === "function") {
-      ytPlayer.seekTo(targetSec, true);
+function bindSeekBar(el) {
+  el.addEventListener("touchstart", () => {
+    state.hudInteracting = true;
+    state.isSeeking = true;
+    clearTimeout(state.hudTimeout);
+  }, { passive: true });
+  el.addEventListener("mousedown", () => {
+    state.hudInteracting = true;
+    state.isSeeking = true;
+    clearTimeout(state.hudTimeout);
+  });
+  el.addEventListener("input", (e) => {
+    state.isSeeking = true;
+    const pct = Number(e.target.value) / 100;
+    const dur = getActivePlaybackDuration();
+    if (dur > 0) {
+      seekToSeconds(pct * dur);
     }
-  }
-});
+  });
+  const finishSeek = () => {
+    state.isSeeking = false;
+    state.hudInteracting = false;
+    resetHudAutoHide();
+  };
+  el.addEventListener("change", finishSeek);
+  el.addEventListener("touchend", finishSeek);
+  el.addEventListener("mouseup", finishSeek);
+}
 
-document.getElementById("seekBar").addEventListener("change", () => {
-  state.isSeeking = false;
-});
+bindSeekBar(document.getElementById("seekBar"));
+bindSeekBar(document.getElementById("mxSeekBar"));
 
 async function resolveAudioUrl(videoId) {
   try {
@@ -2623,8 +2759,11 @@ async function playTrackNow(track, pushPrev = true) {
   state.userPausedManually = false;
   state.isPlaying = true;
   state.savedPositionSec = 0;
+  setPlaybackSpeed(1.0);
   document.getElementById("seekBar").value = "0";
+  document.getElementById("mxSeekBar").value = "0";
   document.getElementById("currentTime").textContent = "0:00";
+  document.getElementById("mxCurTime").textContent = "0:00";
 
   if (state.videoModeActive) {
     state.videoModeActive = false;
@@ -2683,9 +2822,8 @@ function enterVideoMode() {
   document.getElementById("videoStage").classList.add("active");
   document.getElementById("videoModeButton").textContent = "AUDIO MODE";
   document.getElementById("videoModeButton").classList.add("active-watch");
-  document.getElementById("mxVcToggleBtn").textContent = "VC: VIDEO";
   document.getElementById("globalBackBtn").disabled = false;
-  resetHudAutoHide();
+  showHudNow();
 
   if (ytPlayer && state.playerReady) {
     if (state.activeEngine === "yt") {
@@ -2707,6 +2845,7 @@ function enterVideoMode() {
 function exitVideoModeToAudio(resumeAudio = true) {
   const resumeSec = Math.floor(getActivePlaybackTime());
   state.savedPositionSec = resumeSec;
+  setPlaybackSpeed(1.0);
 
   state.videoModeActive = false;
   document.getElementById("videoStage").classList.remove("active");
@@ -2802,67 +2941,140 @@ function togglePlayPause() {
 
 document.getElementById("playPauseButton").addEventListener("click", togglePlayPause);
 document.getElementById("miniPlayBtn").addEventListener("click", togglePlayPause);
+
 document.getElementById("mxPlayPauseBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   togglePlayPause();
+  resetHudAutoHide();
 });
 document.getElementById("mxPrevBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   playPrevTrack();
+  resetHudAutoHide();
 });
 document.getElementById("mxNextBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   playNextFromQueue();
+  resetHudAutoHide();
+});
+document.getElementById("mxRewind10Btn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  seekToSeconds(getActivePlaybackTime() - 10);
+  resetHudAutoHide();
+});
+document.getElementById("mxForward10Btn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  seekToSeconds(getActivePlaybackTime() + 10);
+  resetHudAutoHide();
 });
 document.getElementById("mxVcToggleBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   exitVideoModeToAudio(true);
 });
 
-/* MX Aspect Ratio, Pinch-to-Zoom, and Fullscreen with Landscape Lock */
-function setVideoAspect(mode) {
-  state.videoAspect = mode;
+/* Captions (CC) Toggle: Background when ON, No Background when OFF */
+document.getElementById("mxCcToggleBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  state.ccEnabled = !state.ccEnabled;
+  const btn = document.getElementById("mxCcToggleBtn");
+  btn.classList.toggle("cc-on", state.ccEnabled);
+  try {
+    if (ytPlayer && state.playerReady) {
+      if (state.ccEnabled && typeof ytPlayer.loadModule === "function") {
+        ytPlayer.loadModule("captions");
+        ytPlayer.setOption?.("captions", "track", {});
+      } else if (!state.ccEnabled && typeof ytPlayer.unloadModule === "function") {
+        ytPlayer.unloadModule("captions");
+      }
+    }
+  } catch {}
+  resetHudAutoHide();
+});
+
+/* 3-in-1 Aspect Cycle Button (16:9 -> FIT -> FILL) */
+function applyAspectIndex() {
+  const mode = ASPECT_CYCLE[state.aspectIndex % ASPECT_CYCLE.length];
   const frame = document.getElementById("videoFrame");
   frame.classList.remove("ratio-16-9", "ratio-fit", "ratio-fill");
   frame.classList.add(`ratio-${mode}`);
-  document.getElementById("mxRatio169Btn").classList.toggle("active", mode === "16-9");
-  document.getElementById("mxRatioFitBtn").classList.toggle("active", mode === "fit");
-  document.getElementById("mxRatioFillBtn").classList.toggle("active", mode === "fill");
+  const label = mode === "16-9" ? "16:9" : mode === "fit" ? "FIT" : "FILL";
+  document.getElementById("mxAspectCycleBtn").textContent = label;
 }
+
+document.getElementById("mxAspectCycleBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  state.aspectIndex = (state.aspectIndex + 1) % ASPECT_CYCLE.length;
+  applyAspectIndex();
+  resetHudAutoHide();
+});
 
 function applyVideoTransform() {
   const wrap = document.getElementById("videoCropWrap");
   wrap.style.transform = `translate(${state.videoPanX}px, ${state.videoPanY}px) scale(${state.videoZoom})`;
-  document.getElementById("mxZoomResetBtn").textContent = `ZOOM ${state.videoZoom.toFixed(1)}x`;
 }
 
-document.getElementById("mxRatio169Btn").addEventListener("click", (e) => { e.stopPropagation(); setVideoAspect("16-9"); });
-document.getElementById("mxRatioFitBtn").addEventListener("click", (e) => { e.stopPropagation(); setVideoAspect("fit"); });
-document.getElementById("mxRatioFillBtn").addEventListener("click", (e) => { e.stopPropagation(); setVideoAspect("fill"); });
 document.getElementById("mxZoomResetBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   state.videoZoom = 1.0;
   state.videoPanX = 0;
   state.videoPanY = 0;
   applyVideoTransform();
+  resetHudAutoHide();
 });
 
+/* Long-Press Left or Right Side for 2x Speed + Pinch Zoom + HUD Visibility */
 let pinchStartDist = 0;
 let pinchStartZoom = 1.0;
+let longPress2xTimer = null;
+let triggered2xHold = false;
 const videoFrameEl = document.getElementById("videoFrame");
 
-videoFrameEl.addEventListener("touchstart", (e) => {
+function showHudNow() {
+  const overlay = document.getElementById("mxVideoOverlay");
+  overlay.classList.remove("hud-hidden");
   resetHudAutoHide();
+}
+
+function resetHudAutoHide() {
+  clearTimeout(state.hudTimeout);
+  if (state.hudInteracting) return;
+  state.hudTimeout = setTimeout(() => {
+    if (state.videoModeActive && !state.hudInteracting) {
+      document.getElementById("mxVideoOverlay").classList.add("hud-hidden");
+    }
+  }, 5000);
+}
+
+videoFrameEl.addEventListener("touchstart", (e) => {
+  clearTimeout(longPress2xTimer);
+  triggered2xHold = false;
+
   if (e.touches.length === 2) {
+    state.hudInteracting = true;
     const dx = e.touches[0].clientX - e.touches[1].clientX;
     const dy = e.touches[0].clientY - e.touches[1].clientY;
     pinchStartDist = Math.hypot(dx, dy);
     pinchStartZoom = state.videoZoom;
+    return;
+  }
+
+  if (e.touches.length === 1) {
+    const touch = e.touches[0];
+    const rect = videoFrameEl.getBoundingClientRect();
+    const relX = (touch.clientX - rect.left) / (rect.width || 1);
+    if (relX > 0.65 || relX < 0.35) {
+      longPress2xTimer = setTimeout(() => {
+        triggered2xHold = true;
+        setPlaybackSpeed(2.0);
+        showHudNow();
+      }, 450);
+    }
   }
 }, { passive: true });
 
 videoFrameEl.addEventListener("touchmove", (e) => {
   if (e.touches.length === 2 && pinchStartDist > 0) {
+    clearTimeout(longPress2xTimer);
     const dx = e.touches[0].clientX - e.touches[1].clientX;
     const dy = e.touches[0].clientY - e.touches[1].clientY;
     const dist = Math.hypot(dx, dy);
@@ -2873,28 +3085,34 @@ videoFrameEl.addEventListener("touchmove", (e) => {
 }, { passive: true });
 
 videoFrameEl.addEventListener("touchend", () => {
-  if (pinchStartDist === 0) {
-    const overlay = document.getElementById("mxVideoOverlay");
-    overlay.classList.toggle("hud-hidden");
-    if (!overlay.classList.contains("hud-hidden")) resetHudAutoHide();
+  clearTimeout(longPress2xTimer);
+  if (triggered2xHold) {
+    setPlaybackSpeed(1.0);
+    triggered2xHold = false;
+    resetHudAutoHide();
+    return;
   }
-  pinchStartDist = 0;
-});
-
-function resetHudAutoHide() {
+  if (pinchStartDist > 0) {
+    pinchStartDist = 0;
+    state.hudInteracting = false;
+    resetHudAutoHide();
+    return;
+  }
   const overlay = document.getElementById("mxVideoOverlay");
-  overlay.classList.remove("hud-hidden");
-  clearTimeout(state.hudTimeout);
-  state.hudTimeout = setTimeout(() => {
-    if (state.videoModeActive) overlay.classList.add("hud-hidden");
-  }, 3500);
-}
+  if (overlay.classList.contains("hud-hidden")) {
+    showHudNow();
+  } else {
+    overlay.classList.add("hud-hidden");
+    clearTimeout(state.hudTimeout);
+  }
+});
 
 async function enterFullscreenLandscape() {
   if (!state.currentTrack) return;
   if (!state.videoModeActive) {
     enterVideoMode();
   }
+  showHudNow();
   const target = document.getElementById("videoFrame");
   if (!target) return;
 
@@ -2937,6 +3155,7 @@ document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement && screen.orientation && screen.orientation.unlock) {
     try { screen.orientation.unlock(); } catch {}
   }
+  if (state.videoModeActive) showHudNow();
   renderActivePage(state.currentPage);
 });
 
